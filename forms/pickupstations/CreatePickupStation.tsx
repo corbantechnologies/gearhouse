@@ -94,7 +94,6 @@ export default function CreatePickupStation({
           id="location"
           name="location"
           type="text"
-          required
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           value={formik.values.location}
@@ -114,7 +113,6 @@ export default function CreatePickupStation({
             id="map_link"
             name="map_link"
             type="url"
-            required
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             value={formik.values.map_link}

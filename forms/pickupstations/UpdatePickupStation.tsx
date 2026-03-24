@@ -111,7 +111,6 @@ export default function UpdatePickupStation({
           id="location"
           name="location"
           type="text"
-          required
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           value={formik.values.location}
@@ -131,7 +130,6 @@ export default function UpdatePickupStation({
             id="map_link"
             name="map_link"
             type="url"
-            required
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             value={formik.values.map_link}
@@ -156,7 +154,6 @@ export default function UpdatePickupStation({
               type="number"
               min="0"
               step="0.01"
-              required
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               value={formik.values.cost_to_customer}
