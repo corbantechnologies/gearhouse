@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-border: var(--border);
+
+  --font-display: var(--font-space-grotesk);
+  --font-sans: var(--font-inter);
+}
+
+:root {
+  /* Apple-inspired light palette */
+  --background: #FFFFFF;
+  --foreground: #1D1D1F;
+
+  /* Apple Blue */
+  --primary: #0071E3;
+  --primary-foreground: #FFFFFF;
+
+  /* Apple light grey surface */
+  --secondary: #F5F5F7;
+  --secondary-foreground: #6E6E73;
+
+  /* Hover/active blue */
+  --accent: #0077ED;
+  --accent-foreground: #FFFFFF;
+
+  /* Muted text */
+  --muted: #F5F5F7;
+  --muted-foreground: #86868B;
+
+  /* Apple subtle border */
+  --border: #D2D2D7;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Display font utility */
+.font-display {
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Scrollbar hiding utility */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom scrollbar for panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Smooth transitions globally */
+* {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Remove transition on elements that shouldn't animate */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Apple-style focus ring */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Blue link accent */
+a:not([class]) {
+  color: var(--primary);
+}
+a:not([class]):hover {
+  text-decoration: underline;
+}
