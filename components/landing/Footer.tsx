@@ -11,10 +11,9 @@ export default function Footer() {
           <div>
             <Link
               href="/"
-              className="flex items-center gap-1.5 text-xl font-bold text-[#1D1D1F] mb-4"
+              className="flex items-center mb-4 transition-opacity hover:opacity-90"
             >
-              <Zap className="w-5 h-5 text-[#0071E3] fill-[#0071E3]" />
-              GearHouse
+              <img src="/logo.svg" alt="GearHouse" className="h-8 w-auto" />
             </Link>
             <p className="text-sm text-[#6E6E73] leading-relaxed mb-5">
               Your destination for premium tech gear — curated for professionals,

@@ -38,14 +38,11 @@ export default function VendorNavbar() {
           {/* Brand */}
           <Link
             href="/vendor/dashboard"
-            className="flex items-center gap-2 flex-shrink-0"
+            className="flex items-center gap-2 flex-shrink-0 transition-opacity hover:opacity-90"
           >
-            <div className="w-7 h-7 bg-[#0071E3] rounded-lg flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white fill-white" />
-            </div>
-            <div className="hidden sm:block">
-              <span className="text-sm font-bold text-[#1D1D1F]">GearHouse</span>
-              <span className="text-xs text-[#86868B] ml-1.5 font-medium">Vendor Portal</span>
+            <img src="/logo.svg" alt="GearHouse" className="h-7 w-auto" />
+            <div className="hidden sm:block border-l border-[#D2D2D7] ml-1 pl-2.5">
+              <span className="text-xs text-[#86868B] font-semibold uppercase tracking-wider">Vendor Portal</span>
             </div>
           </Link>
 

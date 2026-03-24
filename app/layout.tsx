@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import NextAuthProvider from "@/providers/NextAuthProvider";
@@ -22,6 +22,40 @@ export const metadata: Metadata = {
   description:
     "GearHouse is your destination for premium tech gear — laptops, peripherals, gadgets and more. Powered by Corban Technologies LTD.",
   keywords: ["tech shop", "gadgets", "peripherals", "electronics", "GearHouse", "Corban Technologies"],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "GearHouse",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
+    ],
+  },
+  openGraph: {
+    title: "GearHouse — Premium Tech Shop",
+    description: "Shop premium tech gear at GearHouse. Powered by Corban Technologies LTD.",
+    type: "website",
+    locale: "en_US",
+    siteName: "GearHouse",
+  },
+  twitter: {
+    card: "summary",
+    title: "GearHouse — Premium Tech Shop",
+    description: "Shop premium tech gear at GearHouse.",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0071E3",
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -32,7 +66,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/icon-192.svg" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="GearHouse" />
       </head>
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}

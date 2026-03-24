@@ -38,10 +38,9 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-xl font-bold text-[#1D1D1F] tracking-tight z-50 relative outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] rounded"
+            className="flex items-center z-50 relative outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] rounded-lg transition-opacity hover:opacity-90"
           >
-            <Zap className="w-5 h-5 text-[#0071E3] fill-[#0071E3]" />
-            GearHouse
+            <img src="/logo.svg" alt="GearHouse" className="h-8 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
@@ -167,9 +166,8 @@ export default function Navbar() {
             className="relative z-[100] w-full sm:w-80 bg-white h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300"
           >
             <div className="flex items-center justify-between px-6 py-5 border-b border-[#D2D2D7]">
-              <span className="flex items-center gap-1.5 text-lg font-bold text-[#1D1D1F]">
-                <Zap className="w-4 h-4 text-[#0071E3] fill-[#0071E3]" />
-                GearHouse
+              <span className="flex items-center">
+                <img src="/logo.svg" alt="GearHouse" className="h-7 w-auto" />
               </span>
               <button
                 className="text-[#6E6E73] hover:text-[#1D1D1F] transition-colors outline-none rounded"
