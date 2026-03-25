@@ -21,9 +21,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import PickupStationSelector from "@/components/checkout/PickupStationSelector";
+import ShippingZoneSelector from "@/components/checkout/ShippingZoneSelector";
 import { toast } from "react-hot-toast";
 import { checkoutCart } from "@/services/cart";
 import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
+import { useFetchShippingZones } from "@/hooks/shipping/actions";
+import { Truck, Home } from "lucide-react";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -32,18 +35,37 @@ export default function CheckoutPage() {
   const [checkingOut, setIsCheckingOut] = useState(false);
   const { data: pickupStations, isLoading: isStationsLoading } =
     useFetchPickupStations();
+  const { data: shippingZones, isLoading: isZonesLoading } = useFetchShippingZones();
   const header = useAxiosAuth();
+  
+  const [deliveryType, setDeliveryType] = useState<"PICKUP" | "HOME">("PICKUP");
   const [selectedStationCode, setSelectedStationCode] = useState("");
+  const [selectedZoneCode, setSelectedZoneCode] = useState("");
+  const [shippingAddress, setShippingAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
 
   const selectedStation = pickupStations?.find(
     (s) => s.station_code === selectedStationCode,
   );
 
+  const selectedZone = shippingZones?.find(
+    (z) => z.zone_code === selectedZoneCode,
+  );
+
   const handleCheckout = async () => {
-    if (!selectedStationCode) {
+    if (deliveryType === "PICKUP" && !selectedStationCode) {
       toast.error("Please select a pickup station");
       return;
+    }
+    if (deliveryType === "HOME") {
+      if (!selectedZoneCode) {
+        toast.error("Please select a shipping zone");
+        return;
+      }
+      if (!shippingAddress) {
+        toast.error("Please enter a shipping address");
+        return;
+      }
     }
     if (!phoneNumber) {
       toast.error("Please enter a phone number");
@@ -55,7 +77,10 @@ export default function CheckoutPage() {
 
       const order = await checkoutCart(
         {
-          pickup_station: selectedStationCode,
+          delivery_type: deliveryType,
+          pickup_station: deliveryType === "PICKUP" ? selectedStationCode : undefined,
+          shipping_zone: deliveryType === "HOME" ? selectedZoneCode : undefined,
+          shipping_address: deliveryType === "HOME" ? shippingAddress : undefined,
           phone_number: phoneNumber,
         },
         header,
@@ -107,10 +132,11 @@ export default function CheckoutPage() {
     );
   }
 
-  const deliveryCost = selectedStation
-    ? parseFloat(selectedStation.cost_to_customer)
-    : 0;
-  const deliveryCurrency = selectedStation?.shop_details?.currency || "KES";
+  const deliveryCost = deliveryType === "PICKUP"
+    ? (selectedStation ? parseFloat(selectedStation.cost_to_customer) : 0)
+    : (selectedZone ? parseFloat(selectedZone.delivery_cost) : 0);
+
+  const deliveryCurrency = "KES";
   const grandTotal = cart.grand_total + deliveryCost;
 
   return (
@@ -175,17 +201,71 @@ export default function CheckoutPage() {
                 <MapPin className="w-4 h-4 text-primary" />
                 2. Delivery Method
               </h2>
+              
+              <div className="flex gap-4 mb-6 p-1 bg-secondary/10 rounded-lg w-fit">
+                <button
+                  onClick={() => setDeliveryType("PICKUP")}
+                  className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium text-sm transition-all ${
+                    deliveryType === "PICKUP"
+                      ? "bg-white text-primary shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <MapPin className="w-4 h-4" />
+                  Pickup Station
+                </button>
+                <button
+                  onClick={() => setDeliveryType("HOME")}
+                  className={`flex items-center gap-2 px-6 py-2 rounded-md font-medium text-sm transition-all ${
+                    deliveryType === "HOME"
+                      ? "bg-white text-primary shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Home className="w-4 h-4" />
+                  Home Delivery
+                </button>
+              </div>
+
               <div className="space-y-4">
-                <div className="text-sm text-muted-foreground mb-2">
-                  Select a pickup station near you. Orders are typically ready
-                  within 2-3 business days.
-                </div>
-                <PickupStationSelector
-                  stations={pickupStations || []}
-                  selectedStationCode={selectedStationCode}
-                  onSelect={setSelectedStationCode}
-                  isLoading={isStationsLoading}
-                />
+                {deliveryType === "PICKUP" ? (
+                  <>
+                    <div className="text-sm text-muted-foreground mb-2">
+                      Select a pickup station near you. Orders are typically ready
+                      within 2-3 business days.
+                    </div>
+                    <PickupStationSelector
+                      stations={pickupStations || []}
+                      selectedStationCode={selectedStationCode}
+                      onSelect={setSelectedStationCode}
+                      isLoading={isStationsLoading}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-sm text-muted-foreground mb-2">
+                      Select your shipping zone and provide your delivery address.
+                    </div>
+                    <ShippingZoneSelector
+                      zones={shippingZones || []}
+                      selectedZoneCode={selectedZoneCode}
+                      onSelect={setSelectedZoneCode}
+                      isLoading={isZonesLoading}
+                    />
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-foreground mb-1">
+                        Shipping Address <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        placeholder="House Number, Street, Apartment, City..."
+                        value={shippingAddress}
+                        onChange={(e) => setShippingAddress(e.target.value)}
+                        rows={3}
+                        className="w-full px-4 py-3 border border-input rounded-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm resize-none"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </section>
 
@@ -249,7 +329,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Delivery Fee</span>
                   <span className="font-medium text-foreground">
-                    {selectedStation
+                    {deliveryCost > 0
                       ? formatCurrency(deliveryCost, deliveryCurrency)
                       : "--"}
                   </span>
@@ -282,7 +362,12 @@ export default function CheckoutPage() {
 
               <button
                 onClick={handleCheckout}
-                disabled={checkingOut || !selectedStationCode || !phoneNumber}
+                disabled={
+                  checkingOut || 
+                  !phoneNumber || 
+                  (deliveryType === "PICKUP" && !selectedStationCode) || 
+                  (deliveryType === "HOME" && (!selectedZoneCode || !shippingAddress))
+                }
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-4 rounded-sm font-medium text-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
               >
                 {checkingOut ? (
@@ -295,9 +380,14 @@ export default function CheckoutPage() {
                 )}
               </button>
 
-              {!selectedStationCode && (
+              {deliveryType === "PICKUP" && !selectedStationCode && (
                 <p className="text-xs text-red-500 mt-2 text-center">
                   Please select a pickup station to proceed.
+                </p>
+              )}
+              {deliveryType === "HOME" && (!selectedZoneCode || !shippingAddress) && (
+                <p className="text-xs text-red-500 mt-2 text-center">
+                  Please select a zone and enter address to proceed.
                 </p>
               )}
             </div>
