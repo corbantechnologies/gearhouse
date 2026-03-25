@@ -10,6 +10,7 @@ import UploadProductImages from "@/forms/products/UploadProductImages";
 import UpdateProduct from "@/forms/products/UpdateProduct";
 import UpdateProductVariant from "@/forms/products/UpdateProductVariant";
 import CreateProductVariant from "@/forms/products/CreateProductVariant";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { updateProduct } from "@/services/products";
 import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 import toast from "react-hot-toast";
@@ -24,8 +25,9 @@ import {
   Plus,
   Rocket,
   Loader2,
+  Trash2,
 } from "lucide-react";
-import { ProductVariant } from "@/services/productvariants";
+import { ProductVariant, deleteProductVariant } from "@/services/productvariants";
 
 export default function ProductPage() {
   const params = useParams();
@@ -50,7 +52,10 @@ export default function ProductPage() {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     null,
   );
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [variantToDelete, setVariantToDelete] = useState<ProductVariant | null>(null);
   const [publishing, setPublishing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleEditVariant = (variant: ProductVariant) => {
     setSelectedVariant(variant);
@@ -60,6 +65,28 @@ export default function ProductPage() {
   const handleCloseVariantModal = () => {
     setSelectedVariant(null);
     setIsVariantModalOpen(false);
+  };
+
+  const handleDeleteVariant = (variant: ProductVariant) => {
+    setVariantToDelete(variant);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeleteVariant = async () => {
+    if (!variantToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteProductVariant(variantToDelete.reference, authHeaders);
+      toast.success("Variant deleted successfully");
+      setIsDeleteModalOpen(false);
+      setVariantToDelete(null);
+      refetch();
+    } catch (error) {
+      toast.error("Failed to delete variant");
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handlePublish = async () => {
@@ -255,7 +282,7 @@ export default function ProductPage() {
                   Add Variant
                 </button>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto hidden sm:block">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-secondary/5 border-b border-secondary/20">
@@ -326,6 +353,13 @@ export default function ProductPage() {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
+                            <button
+                              onClick={() => handleDeleteVariant(variant)}
+                              className="text-red-500 hover:text-red-700 transition-colors p-1 ml-2"
+                              title="Delete Variant"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -341,6 +375,64 @@ export default function ProductPage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Variants View - Card based */}
+              <div className="sm:hidden divide-y divide-secondary/10">
+                {product.variants && product.variants.length > 0 ? (
+                  product.variants.map((variant) => (
+                    <div key={variant.id} className="p-4 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex flex-col gap-2 flex-1">
+                          <div className="flex flex-wrap gap-1.5">
+                            {Object.entries(variant.attributes).map(([key, value]) => (
+                              <span key={key} className="bg-secondary/10 px-2 py-0.5 rounded text-[10px] text-foreground/80 border border-secondary/20">
+                                {key}: <span className="font-semibold">{String(value)}</span>
+                              </span>
+                            ))}
+                            {Object.keys(variant.attributes).length === 0 && (
+                              <span className="text-muted-foreground text-[10px] italic">Default Variant</span>
+                            )}
+                          </div>
+                          <span className="text-[10px] font-mono text-muted-foreground">{variant.sku}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditVariant(variant)}
+                            className="p-2 bg-primary/5 text-primary rounded-sm border border-primary/20"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteVariant(variant)}
+                            className="p-2 bg-red-50 text-red-600 rounded-sm border border-red-100"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-4 bg-secondary/5 p-3 rounded-sm border border-secondary/10">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground mb-1">Price</span>
+                          <span className="text-xs font-bold text-foreground">{currency} {Number(variant.price).toLocaleString()}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground mb-1">Cost</span>
+                          <span className="text-xs font-medium text-foreground">{currency} {Number(variant.cost_price).toLocaleString()}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground mb-1">Stock</span>
+                          <span className={`text-xs font-bold ${variant.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>{variant.stock}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-sm text-muted-foreground">
+                    No variants found.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -482,6 +574,19 @@ export default function ProductPage() {
             }}
           />
         </VendorModal>
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={confirmDeleteVariant}
+          title="Delete Variant"
+          message={`Are you sure you want to delete the variant with SKU: ${variantToDelete?.sku}? This action cannot be undone.`}
+          confirmLabel="Delete Variant"
+          cancelLabel="Keep Variant"
+          isLoading={isDeleting}
+          variant="danger"
+        />
       </div>
     </div>
   );

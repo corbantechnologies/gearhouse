@@ -92,7 +92,7 @@ export default function ProductsPage() {
 
         {/* Products Table */}
         <div className="bg-white border border-[#D2D2D7] rounded-2xl overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto hidden sm:block">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#F5F5F7] border-b border-[#D2D2D7]">
@@ -169,6 +169,77 @@ export default function ProductsPage() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Products View - Card based */}
+          <div className="sm:hidden divide-y divide-[#F5F5F7]">
+            {isLoading ? (
+               Array(5).fill(0).map((_, i) => (
+                <div key={i} className="p-4 animate-pulse">
+                  <div className="flex gap-4">
+                    <div className="w-16 h-16 bg-[#F5F5F7] rounded-xl" />
+                    <div className="flex-1 space-y-2">
+                       <div className="h-4 bg-[#F5F5F7] rounded w-3/4" />
+                       <div className="h-3 bg-[#F5F5F7] rounded w-1/2" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : filteredProducts && filteredProducts.length > 0 ? (
+              filteredProducts.map((product) => (
+                <div key={product.reference} className="p-4 space-y-4">
+                  <div className="flex gap-4">
+                    <div className="h-16 w-16 rounded-xl bg-[#F5F5F7] border border-[#D2D2D7] overflow-hidden flex items-center justify-center flex-shrink-0">
+                      {product.images && product.images.length > 0 ? (
+                        <img
+                          src={product.images[0].image}
+                          alt={product.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <Package className="h-6 w-6 text-[#D2D2D7]" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[#1D1D1F] text-sm truncate">{product.name}</p>
+                      <p className="text-[10px] font-mono text-[#86868B] mt-0.5">{product.product_code}</p>
+                      <div className="mt-2 text-xs text-[#6E6E73]">
+                        {product.total_stock} units in stock
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                       <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-tighter ${
+                          product.is_active
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {product.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Link
+                      href={`/vendor/products/${product.reference}`}
+                      className="inline-flex items-center px-4 py-2 text-xs font-semibold text-[#0071E3] hover:text-[#0077ED] border border-[#0071E3]/30 hover:border-[#0071E3] rounded-full transition-all w-full justify-center bg-[#F5F5F7] group"
+                    >
+                      Manage Product
+                      <MoreHorizontal className="ml-2 w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="px-6 py-20">
+                <div className="flex flex-col items-center justify-center gap-3 text-center">
+                  <div className="w-12 h-12 bg-[#F5F5F7] rounded-2xl border border-[#D2D2D7] flex items-center justify-center">
+                    <Package className="w-5 h-5 text-[#D2D2D7]" />
+                  </div>
+                  <p className="text-sm font-semibold text-[#1D1D1F]">No products yet</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

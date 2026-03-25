@@ -5,7 +5,7 @@ import { useCart } from "@/context/CartContext";
 import ProductCard from "@/components/products/ProductCard";
 import AddToCartButton from "@/components/products/AddToCartButton";
 import { formatCurrency } from "@/components/dashboard/utils";
-import { Loader2, Minus, Plus, ChevronRight } from "lucide-react";
+import { Loader2, Minus, Plus, ChevronRight, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { useState, use } from "react";
 import Link from "next/link";
@@ -26,6 +26,7 @@ export default function ProductDetailsPage({
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [expandedVariants, setExpandedVariants] = useState<{ [key: string]: boolean }>({});
   const [globalQuantity, setGlobalQuantity] = useState(1);
 
   if (isLoading) {
@@ -215,9 +216,9 @@ export default function ProductDetailsPage({
                   </h3>
                 </div>
 
-                <div className="space-y-3">
-                  {/* Header */}
-                  <div className="grid grid-cols-12 gap-4 text-xs font-semibold uppercase text-muted-foreground pb-2 border-b border-border/50">
+                <div className="space-y-4 sm:space-y-3">
+                  {/* Header - Hidden on mobile */}
+                  <div className="hidden sm:grid grid-cols-12 gap-4 text-xs font-semibold uppercase text-muted-foreground pb-2 border-b border-border/50">
                     <div className="col-span-6">Variant</div>
                     <div className="col-span-3 text-center">Price</div>
                     <div className="col-span-3 text-right">Qty</div>
@@ -225,75 +226,138 @@ export default function ProductDetailsPage({
 
                   {/* Variant Rows */}
                   {variants.map((variant) => {
-                    const variantName =
-                      Object.values(variant.attributes).join(" - ") ||
-                      variant.product_name;
-                    // Use SKU for quantity lookup
+                    const attributeEntries = Object.entries(variant.attributes);
                     const qty = quantities[variant.sku] || 0;
+                    const isExpanded = expandedVariants[variant.sku] || false;
+
+                    const toggleExpand = () => {
+                      setExpandedVariants((prev) => ({
+                        ...prev,
+                        [variant.sku]: !isExpanded,
+                      }));
+                    };
 
                     return (
                       <div
-                        key={variant.sku} // Use SKU as key
-                        className="grid grid-cols-12 gap-4 items-center py-2 border-b border-border/10 last:border-0"
+                        key={variant.sku}
+                        className="border-b border-border/10 last:border-0 hover:bg-secondary/5 transition-colors px-2 -mx-2 rounded-sm pb-4 sm:pb-0"
                       >
-                        <div className="col-span-6">
-                          <p className="font-medium text-sm text-foreground">
-                            {variantName}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {variant.stock > 0
-                              ? `${variant.stock} in stock`
-                              : "Out of stock"}
-                          </p>
-                        </div>
-                        <div className="col-span-3 text-center text-sm font-medium text-foreground/80">
-                          {formatCurrency(
-                            variant.price,
-                            product.shop_details.currency,
-                          )}
-                        </div>
-                        <div className="col-span-3 flex justify-end">
-                          {variant.stock > 0 ? (
-                            <div className="flex items-center border border-border rounded-md">
-                              <button
-                                onClick={() =>
-                                  handleVariantQuantityChange(
-                                    variant.sku, // Use SKU
-                                    -1,
-                                    variant.stock,
-                                  )
-                                }
-                                className="p-1 hover:bg-secondary/10 transition-colors"
-                                disabled={qty <= 0}
-                              >
-                                <Minus className="w-3 h-3" />
-                              </button>
-                              <input
-                                type="text"
-                                value={qty}
-                                readOnly
-                                className="w-8 text-center text-sm bg-transparent border-none focus:ring-0 p-0"
-                              />
-                              <button
-                                onClick={() =>
-                                  handleVariantQuantityChange(
-                                    variant.sku, // Use SKU
-                                    1,
-                                    variant.stock,
-                                  )
-                                }
-                                className="p-1 hover:bg-secondary/10 transition-colors"
-                                disabled={qty >= variant.stock}
-                              >
-                                <Plus className="w-3 h-3" />
-                              </button>
+                        <div className="flex flex-col sm:grid sm:grid-cols-12 gap-4 sm:items-center py-3">
+                          <div className="sm:col-span-6">
+                            <div className="flex items-center gap-2">
+                              {attributeEntries.length > 0 && (
+                                <button
+                                  onClick={toggleExpand}
+                                  className="p-1 hover:bg-secondary/20 rounded-full transition-colors"
+                                >
+                                  {isExpanded ? (
+                                    <ChevronDown className="w-4 h-4 text-primary" />
+                                  ) : (
+                                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                  )}
+                                </button>
+                              )}
+                              <div className="flex-1 overflow-hidden">
+                                {attributeEntries.length > 0 ? (
+                                  <button
+                                    onClick={toggleExpand}
+                                    className="text-left group"
+                                  >
+                                    <p className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                                      {attributeEntries[0][1]}
+                                      {attributeEntries.length > 1 && (
+                                        <span className="text-muted-foreground font-normal ml-1">
+                                          + {attributeEntries.length - 1} more{" "}
+                                          details
+                                        </span>
+                                      )}
+                                    </p>
+                                  </button>
+                                ) : (
+                                  <p className="font-medium text-sm text-foreground">
+                                    {variant.product_name}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                          ) : (
-                            <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-1 rounded">
-                              Sold Out
-                            </span>
-                          )}
+                            <p className="text-[10px] text-muted-foreground ml-7">
+                              {variant.stock > 0
+                                ? `${variant.stock} in stock`
+                                : "Out of stock"}
+                            </p>
+                          </div>
+                          <div className="sm:col-span-3 flex items-center justify-between sm:justify-center text-sm font-medium text-foreground/80">
+                            <span className="sm:hidden text-[10px] text-muted-foreground uppercase tracking-wider">Price</span>
+                            {formatCurrency(
+                              variant.price,
+                              product.shop_details.currency,
+                            )}
+                          </div>
+                          <div className="sm:col-span-3 flex items-center justify-between sm:justify-end">
+                             <span className="sm:hidden text-[10px] text-muted-foreground uppercase tracking-wider">Quantity</span>
+                            {variant.stock > 0 ? (
+                              <div className="flex items-center border border-border rounded-md bg-white">
+                                <button
+                                  onClick={() =>
+                                    handleVariantQuantityChange(
+                                      variant.sku,
+                                      -1,
+                                      variant.stock,
+                                    )
+                                  }
+                                  className="p-1.5 hover:bg-secondary/10 transition-colors"
+                                  disabled={qty <= 0}
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <input
+                                  type="text"
+                                  value={qty}
+                                  readOnly
+                                  className="w-8 text-center text-sm bg-transparent border-none focus:ring-0 p-0"
+                                />
+                                <button
+                                  onClick={() =>
+                                    handleVariantQuantityChange(
+                                      variant.sku,
+                                      1,
+                                      variant.stock,
+                                    )
+                                  }
+                                  className="p-1.5 hover:bg-secondary/10 transition-colors"
+                                  disabled={qty >= variant.stock}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-1 rounded">
+                                Sold Out
+                              </span>
+                            )}
+                          </div>
                         </div>
+
+                        {/* Expandable Attributes Container */}
+                        {isExpanded && attributeEntries.length > 0 && (
+                          <div className="pb-4 sm:pl-9 sm:pr-6 animate-in fade-in slide-in-from-top-1 duration-200">
+                             <div className="flex flex-col gap-2 pt-2 border-t border-border/10">
+                              {attributeEntries.map(([key, value]) => (
+                                <div
+                                  key={key}
+                                  className="flex items-center justify-between bg-secondary/5 px-3 py-2 rounded-none border-b border-secondary/10 last:border-0"
+                                >
+                                  <span className="text-[10px] text-muted-foreground mr-4">
+                                    {key}
+                                  </span>
+                                  <span className="text-xs font-medium text-foreground">
+                                    {String(value)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -330,6 +394,22 @@ export default function ProductDetailsPage({
                         {variants[0].sku}
                       </span>
                     </div>
+
+                    {/* Simple Variant Attributes */}
+                    {Object.entries(variants[0].attributes).length > 0 && (
+                      <div className="mt-4 mb-6 space-y-3 border-l-2 border-primary/20 pl-4 py-1 bg-secondary/5 rounded-r-sm">
+                        {Object.entries(variants[0].attributes).map(([key, value]) => (
+                          <div key={key} className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground leading-none mb-1">
+                              {key}
+                            </span>
+                            <span className="text-sm font-medium text-foreground">
+                              {String(value)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {variants[0].stock > 0 && (
                       <div className="flex flex-col gap-4 mt-6">

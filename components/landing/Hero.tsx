@@ -14,7 +14,7 @@ export default function Hero() {
         }}
       />
 
-      <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-24 md:pt-28 md:pb-32">
+      <div className="relative container mx-auto px-4 pt-20 pb-24 md:pt-28 md:pb-32">
         <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
 
           {/* Text Content */}

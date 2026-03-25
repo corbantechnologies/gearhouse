@@ -18,9 +18,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "GearHouse — Premium Tech Shop",
+  title: "GearHouse Africa — Premium Tech Shop",
   description:
-    "GearHouse is your destination for premium tech gear — laptops, peripherals, gadgets and more. Powered by Corban Technologies LTD.",
+    "GearHouse Africa is your destination for premium tech gear — laptops, peripherals, gadgets and more. Powered by Corban Technologies LTD.",
   keywords: ["tech shop", "gadgets", "peripherals", "electronics", "GearHouse", "Corban Technologies"],
   manifest: "/manifest.json",
   appleWebApp: {

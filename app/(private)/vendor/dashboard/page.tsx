@@ -228,7 +228,7 @@ export default function VendorDashboard() {
                 </button>
               </div>
               <div className="bg-white border border-[#D2D2D7] rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto hidden sm:block">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-[#F5F5F7] border-b border-[#D2D2D7]">
@@ -283,6 +283,44 @@ export default function VendorDashboard() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile Categories View - Card based */}
+                <div className="sm:hidden divide-y divide-[#F5F5F7]">
+                  {isLoadingCategories ? (
+                    Array(3).fill(0).map((_, i) => (
+                      <div key={i} className="p-4 flex gap-4 animate-pulse">
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-[#F5F5F7] rounded w-1/2" />
+                          <div className="h-3 bg-[#F5F5F7] rounded w-1/4" />
+                        </div>
+                      </div>
+                    ))
+                  ) : categories && categories.length > 0 ? (
+                    categories.map((cat) => (
+                      <div key={cat.reference} className="p-4 flex justify-between items-center">
+                        <div className="min-w-0 pr-4">
+                          <p className="font-semibold text-[#1D1D1F] text-sm truncate">{cat.name}</p>
+                          <p className="text-[10px] text-[#86868B] mt-0.5">{cat.subcategories.length} subcategories</p>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-tighter ${cat.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                            {cat.is_active ? "Active" : "Inactive"}
+                          </span>
+                          <button
+                            onClick={() => { setSelectedCategoryReference(cat.reference); setIsUpdateCategoryModalOpen(true); }}
+                            className="p-2 text-[#86868B] hover:text-[#0071E3] hover:bg-[#0071E3]/5 rounded-lg transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-12 text-center">
+                       <p className="text-sm text-[#86868B]">No categories yet</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -303,7 +341,7 @@ export default function VendorDashboard() {
                 </button>
               </div>
               <div className="bg-white border border-[#D2D2D7] rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto hidden sm:block">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-[#F5F5F7] border-b border-[#D2D2D7]">
@@ -358,6 +396,45 @@ export default function VendorDashboard() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile Subcategories View - Card based */}
+                <div className="sm:hidden divide-y divide-[#F5F5F7]">
+                  {isLoadingSubcategories ? (
+                    Array(3).fill(0).map((_, i) => (
+                      <div key={i} className="p-4 flex gap-4 animate-pulse">
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-[#F5F5F7] rounded w-1/2" />
+                          <div className="h-3 bg-[#F5F5F7] rounded w-1/4" />
+                        </div>
+                      </div>
+                    ))
+                  ) : subcategories && subcategories.length > 0 ? (
+                    subcategories.map((sub) => (
+                      <div key={sub.reference} className="p-4 space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div className="min-w-0 pr-4">
+                            <p className="font-semibold text-[#1D1D1F] text-sm truncate">{sub.name || "N/A"}</p>
+                            <p className="text-[10px] text-[#86868B] mt-0.5">Parent: {sub.category}</p>
+                          </div>
+                          <button
+                            onClick={() => { setSelectedSubCategoryReference(sub.reference); setIsUpdateSubCategoryModalOpen(true); }}
+                            className="p-2 text-[#86868B] hover:text-[#0071E3] hover:bg-[#0071E3]/5 rounded-lg transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px]">
+                           <span className={`px-2 py-0.5 rounded-full uppercase tracking-tighter ${sub.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                            {sub.is_active ? "Active" : "Inactive"}
+                          </span>
+                          <span className="text-[#86868B] font-medium">{formatDate(sub.created_at)}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-12 text-center text-sm text-[#86868B]">No subcategories yet.</div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -380,7 +457,7 @@ export default function VendorDashboard() {
                 )}
               </div>
               <div className="bg-white border border-[#D2D2D7] rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto hidden sm:block">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-[#F5F5F7] border-b border-[#D2D2D7]">
@@ -463,6 +540,53 @@ export default function VendorDashboard() {
                       )}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile Pickup Stations View - Card based */}
+                <div className="sm:hidden divide-y divide-[#F5F5F7]">
+                  {isLoadingPickupStations ? (
+                     Array(3).fill(0).map((_, i) => (
+                      <div key={i} className="p-4 flex gap-4 animate-pulse">
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-[#F5F5F7] rounded w-1/2" />
+                          <div className="h-3 bg-[#F5F5F7] rounded w-1/4" />
+                        </div>
+                      </div>
+                    ))
+                  ) : pickupStations && pickupStations.length > 0 ? (
+                    pickupStations.map((station) => (
+                      <div key={station.reference} className="p-4 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold text-[#1D1D1F] text-sm">{station.name}</p>
+                            <p className="text-[10px] text-[#86868B]">{station.city}, {station.location}</p>
+                          </div>
+                          {vendor?.is_superuser && (
+                             <button
+                              onClick={() => {
+                                setSelectedPickupStationCode(station.station_code);
+                                setIsUpdatePickupStationModalOpen(true);
+                              }}
+                              className="p-2 text-[#86868B] hover:text-[#0071E3] hover:bg-[#0071E3]/5 rounded-lg transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex justify-between items-center bg-[#F5F5F7] p-3 rounded-xl border border-[#D2D2D7]">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] uppercase tracking-widest text-[#86868B] font-semibold mb-0.5">Delivery Cost</span>
+                            <span className="text-xs font-bold text-[#1D1D1F]">{vendor?.shop?.currency || "$"}{station.cost_to_customer}</span>
+                          </div>
+                           <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-tighter ${station.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                            {station.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-12 text-center text-sm text-[#86868B]">No pickup stations yet.</div>
+                  )}
                 </div>
               </div>
             </div>
