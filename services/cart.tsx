@@ -16,7 +16,7 @@ export interface Cart {
   updated_at: string;
 }
 
-interface checkoutCartData {
+export interface checkoutCartData {
   delivery_type: "PICKUP" | "HOME";
   pickup_station?: string; // station code
   shipping_zone?: string; // zone code
