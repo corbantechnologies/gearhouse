@@ -197,8 +197,8 @@ export default function CheckoutPage() {
               </h2>
               <div className="space-y-4">
                 {cart.items.map((item) => (
-                  <div key={item.reference} className="flex gap-4 py-4">
-                    <div className="relative w-10 h-10 bg-secondary/10 rounded-sm overflow-hidden flex-shrink-0">
+                  <div key={item.reference} className="flex gap-4 py-4 border-b border-[#F5F5F7] last:border-0">
+                    <div className="relative w-16 h-16 bg-[#F5F5F7] rounded-xl overflow-hidden flex-shrink-0 border border-[#D2D2D7]/60">
                       <Image
                         src={item.variant_image || "/logo.png"}
                         alt={item.variant_name}

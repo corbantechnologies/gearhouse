@@ -216,9 +216,9 @@ export default function ProductDetailsPage({
                   </h3>
                 </div>
 
-                <div className="space-y-3">
-                  {/* Header */}
-                  <div className="grid grid-cols-12 gap-4 text-xs font-semibold uppercase text-muted-foreground pb-2 border-b border-border/50">
+                <div className="space-y-4 sm:space-y-3">
+                  {/* Header - Hidden on mobile */}
+                  <div className="hidden sm:grid grid-cols-12 gap-4 text-xs font-semibold uppercase text-muted-foreground pb-2 border-b border-border/50">
                     <div className="col-span-6">Variant</div>
                     <div className="col-span-3 text-center">Price</div>
                     <div className="col-span-3 text-right">Qty</div>
@@ -240,10 +240,10 @@ export default function ProductDetailsPage({
                     return (
                       <div
                         key={variant.sku}
-                        className="border-b border-border/10 last:border-0 hover:bg-secondary/5 transition-colors px-2 -mx-2 rounded-sm"
+                        className="border-b border-border/10 last:border-0 hover:bg-secondary/5 transition-colors px-2 -mx-2 rounded-sm pb-4 sm:pb-0"
                       >
-                        <div className="grid grid-cols-12 gap-4 items-center py-3">
-                          <div className="col-span-6">
+                        <div className="flex flex-col sm:grid sm:grid-cols-12 gap-4 sm:items-center py-3">
+                          <div className="sm:col-span-6">
                             <div className="flex items-center gap-2">
                               {attributeEntries.length > 0 && (
                                 <button
@@ -286,60 +286,62 @@ export default function ProductDetailsPage({
                                 : "Out of stock"}
                             </p>
                           </div>
-                        <div className="col-span-3 text-center text-sm font-medium text-foreground/80">
-                          {formatCurrency(
-                            variant.price,
-                            product.shop_details.currency,
-                          )}
-                        </div>
-                        <div className="col-span-3 flex justify-end">
-                          {variant.stock > 0 ? (
-                            <div className="flex items-center border border-border rounded-md">
-                              <button
-                                onClick={() =>
-                                  handleVariantQuantityChange(
-                                    variant.sku, // Use SKU
-                                    -1,
-                                    variant.stock,
-                                  )
-                                }
-                                className="p-1 hover:bg-secondary/10 transition-colors"
-                                disabled={qty <= 0}
-                              >
-                                <Minus className="w-3 h-3" />
-                              </button>
-                              <input
-                                type="text"
-                                value={qty}
-                                readOnly
-                                className="w-8 text-center text-sm bg-transparent border-none focus:ring-0 p-0"
-                              />
-                              <button
-                                onClick={() =>
-                                  handleVariantQuantityChange(
-                                    variant.sku, // Use SKU
-                                    1,
-                                    variant.stock,
-                                  )
-                                }
-                                className="p-1 hover:bg-secondary/10 transition-colors"
-                                disabled={qty >= variant.stock}
-                              >
-                                <Plus className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-1 rounded">
-                              Sold Out
-                            </span>
-                          )}
-                        </div>
+                          <div className="sm:col-span-3 flex items-center justify-between sm:justify-center text-sm font-medium text-foreground/80">
+                            <span className="sm:hidden text-[10px] text-muted-foreground uppercase tracking-wider">Price</span>
+                            {formatCurrency(
+                              variant.price,
+                              product.shop_details.currency,
+                            )}
+                          </div>
+                          <div className="sm:col-span-3 flex items-center justify-between sm:justify-end">
+                             <span className="sm:hidden text-[10px] text-muted-foreground uppercase tracking-wider">Quantity</span>
+                            {variant.stock > 0 ? (
+                              <div className="flex items-center border border-border rounded-md bg-white">
+                                <button
+                                  onClick={() =>
+                                    handleVariantQuantityChange(
+                                      variant.sku,
+                                      -1,
+                                      variant.stock,
+                                    )
+                                  }
+                                  className="p-1.5 hover:bg-secondary/10 transition-colors"
+                                  disabled={qty <= 0}
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <input
+                                  type="text"
+                                  value={qty}
+                                  readOnly
+                                  className="w-8 text-center text-sm bg-transparent border-none focus:ring-0 p-0"
+                                />
+                                <button
+                                  onClick={() =>
+                                    handleVariantQuantityChange(
+                                      variant.sku,
+                                      1,
+                                      variant.stock,
+                                    )
+                                  }
+                                  className="p-1.5 hover:bg-secondary/10 transition-colors"
+                                  disabled={qty >= variant.stock}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-1 rounded">
+                                Sold Out
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Expandable Attributes Container */}
                         {isExpanded && attributeEntries.length > 0 && (
-                          <div className="pb-4 pl-9 pr-6 animate-in fade-in slide-in-from-top-1 duration-200">
-                            <div className="flex flex-col gap-2 pt-2 border-t border-border/5">
+                          <div className="pb-4 sm:pl-9 sm:pr-6 animate-in fade-in slide-in-from-top-1 duration-200">
+                             <div className="flex flex-col gap-2 pt-2 border-t border-border/10">
                               {attributeEntries.map(([key, value]) => (
                                 <div
                                   key={key}
