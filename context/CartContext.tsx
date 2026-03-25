@@ -12,6 +12,7 @@ import { useSession } from "next-auth/react";
 import { Cart } from "@/services/cart";
 import { CartItem } from "@/services/cartitems";
 import { useFetchCart } from "@/hooks/cart/actions";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useAddToCart,
   useUpdateCartItem,
@@ -107,13 +108,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [guestCart, isAuthenticated, isGuestLoading]);
 
+  const queryClient = useQueryClient();
+
   // ── Merge guest cart into server cart when user logs in ──
   useEffect(() => {
     let mounted = true;
 
     const mergeCart = async () => {
       // Small delay to let session & server cart stabilize
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 800));
       if (!mounted) return;
 
       if (isAuthenticated && !isGuestLoading) {
@@ -122,20 +125,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
           try {
             const parsed: Cart = JSON.parse(stored);
             if (parsed?.items?.length > 0) {
-              for (const item of parsed.items) {
-                try {
-                  const sku = item.variant_sku || item.variant;
-                  if (sku) {
-                    await serverAdd({ variant: sku, quantity: item.quantity });
-                  }
-                } catch (e) {
-                  console.error("Failed to sync guest item to server", item, e);
+              console.log("Merging guest cart items to server...");
+              
+              // Map all add operations to promises
+              const syncPromises = parsed.items.map(async (item) => {
+                const sku = item.variant_sku || item.variant;
+                if (sku) {
+                  return serverAdd({ variant: sku, quantity: item.quantity })
+                    .catch(err => console.error(`Failed to sync item ${sku}:`, err));
                 }
-              }
+              });
+
+              await Promise.all(syncPromises);
+
+              // After all items added, invalidate cart query to refetch
+              queryClient.invalidateQueries({ queryKey: ["cart"] });
 
               // Clear guest cart after sync
               localStorage.removeItem("guest_cart");
               setGuestCart(null);
+              console.log("Guest cart successfully merged and cleared.");
             }
           } catch (e) {
             console.error("Failed to parse guest cart during merge", e);
@@ -151,7 +160,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, [isAuthenticated, isGuestLoading, serverAdd]);
+  }, [isAuthenticated, isGuestLoading, serverAdd, queryClient]);
 
   // ── Cart operations ──
   const addToCart = async (input: CartItemInput) => {
