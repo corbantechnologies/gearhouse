@@ -393,6 +393,22 @@ export default function ProductDetailsPage({
                       </span>
                     </div>
 
+                    {/* Simple Variant Attributes */}
+                    {Object.entries(variants[0].attributes).length > 0 && (
+                      <div className="mt-4 mb-6 space-y-3 border-l-2 border-primary/20 pl-4 py-1 bg-secondary/5 rounded-r-sm">
+                        {Object.entries(variants[0].attributes).map(([key, value]) => (
+                          <div key={key} className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground leading-none mb-1">
+                              {key}
+                            </span>
+                            <span className="text-sm font-medium text-foreground">
+                              {String(value)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     {variants[0].stock > 0 && (
                       <div className="flex flex-col gap-4 mt-6">
                         <div className="flex items-center gap-4">
