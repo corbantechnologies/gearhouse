@@ -12,7 +12,7 @@ export default function ShopOrdersPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-12">
+      <div className="container mx-auto px-4 sm:px-6 py-6 md:py-12">
         <div className="flex justify-between items-start md:items-center mb-6">
           <SectionHeader
             title="Shop Orders"

@@ -1,5 +1,45 @@
 @import "tailwindcss";
 
+/* 
+  Explicitly defining .container behavior for Tailwind v4 
+  to ensure consistency across environments.
+*/
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1440px; /* Capping at 1440px for better ultra-wide aesthetics */
+  }
+}
+
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

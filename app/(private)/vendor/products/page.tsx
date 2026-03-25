@@ -44,7 +44,7 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F7]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-12">
+      <div className="container mx-auto px-4 sm:px-6 py-6 md:py-12">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8 mb-8">
           <div className="flex-1">
