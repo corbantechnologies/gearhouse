@@ -148,6 +148,7 @@ export default function OrdersPage() {
                   <th className="px-6 py-4">Date Placed</th>
                   <th className="px-6 py-4">Total Amount</th>
                   <th className="px-6 py-4">Payment Status</th>
+                  <th className="px-6 py-4">Order Status</th>
                   <th className="px-6 py-4">Items</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
@@ -189,6 +190,23 @@ export default function OrdersPage() {
                         }`}
                       >
                         {order.payment_status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                          order.status === "DELIVERED"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : order.status === "SHIPPED"
+                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                              : order.status === "PROCESSING"
+                                ? "bg-purple-50 text-purple-700 border-purple-200"
+                                : order.status === "CANCELLED"
+                                  ? "bg-red-50 text-red-700 border-red-200"
+                                  : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                        }`}
+                      >
+                        {order.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-foreground/60">
