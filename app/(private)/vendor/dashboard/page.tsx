@@ -149,11 +149,10 @@ export default function VendorDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "bg-[#0071E3] text-white shadow-md shadow-[#0071E3]/20"
-                  : "text-[#6E6E73] hover:bg-white hover:text-[#1D1D1F]"
-              }`}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${activeTab === tab.id
+                ? "bg-[#0071E3] text-white shadow-md shadow-[#0071E3]/20"
+                : "text-[#6E6E73] hover:bg-white hover:text-[#1D1D1F]"
+                }`}
             >
               <tab.icon className="w-4 h-4" />
               {tab.label}
@@ -317,7 +316,7 @@ export default function VendorDashboard() {
                     ))
                   ) : (
                     <div className="p-12 text-center">
-                       <p className="text-sm text-[#86868B]">No categories yet</p>
+                      <p className="text-sm text-[#86868B]">No categories yet</p>
                     </div>
                   )}
                 </div>
@@ -424,7 +423,7 @@ export default function VendorDashboard() {
                           </button>
                         </div>
                         <div className="flex justify-between items-center text-[10px]">
-                           <span className={`px-2 py-0.5 rounded-full uppercase tracking-tighter ${sub.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                          <span className={`px-2 py-0.5 rounded-full uppercase tracking-tighter ${sub.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                             {sub.is_active ? "Active" : "Inactive"}
                           </span>
                           <span className="text-[#86868B] font-medium">{formatDate(sub.created_at)}</span>
@@ -464,6 +463,7 @@ export default function VendorDashboard() {
                         <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">Station Name</th>
                         <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">Location</th>
                         <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">Delivery Cost</th>
+                        <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">ETA</th>
                         <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">Status</th>
                         <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">Actions</th>
                       </tr>
@@ -499,6 +499,9 @@ export default function VendorDashboard() {
                             <td className="px-6 py-4 text-sm font-medium text-foreground">
                               {vendor?.shop?.currency || "$"}{" "}
                               {station.cost_to_customer}
+                            </td>
+                            <td className="px-6 py-4 text-sm font-medium text-foreground">
+                              {station.estimated_delivery_days}
                             </td>
                             <td className="px-6 py-4">
                               <span
@@ -545,7 +548,7 @@ export default function VendorDashboard() {
                 {/* Mobile Pickup Stations View - Card based */}
                 <div className="sm:hidden divide-y divide-[#F5F5F7]">
                   {isLoadingPickupStations ? (
-                     Array(3).fill(0).map((_, i) => (
+                    Array(3).fill(0).map((_, i) => (
                       <div key={i} className="p-4 flex gap-4 animate-pulse">
                         <div className="flex-1 space-y-2">
                           <div className="h-4 bg-[#F5F5F7] rounded w-1/2" />
@@ -562,7 +565,7 @@ export default function VendorDashboard() {
                             <p className="text-[10px] text-[#86868B]">{station.city}, {station.location}</p>
                           </div>
                           {vendor?.is_superuser && (
-                             <button
+                            <button
                               onClick={() => {
                                 setSelectedPickupStationCode(station.station_code);
                                 setIsUpdatePickupStationModalOpen(true);
@@ -578,7 +581,7 @@ export default function VendorDashboard() {
                             <span className="text-[9px] uppercase tracking-widest text-[#86868B] font-semibold mb-0.5">Delivery Cost</span>
                             <span className="text-xs font-bold text-[#1D1D1F]">{vendor?.shop?.currency || "$"}{station.cost_to_customer}</span>
                           </div>
-                           <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-tighter ${station.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-tighter ${station.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                             {station.is_active ? "Active" : "Inactive"}
                           </span>
                         </div>
