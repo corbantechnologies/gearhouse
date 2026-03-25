@@ -72,7 +72,7 @@ export default function Footer() {
                 { label: "My Orders", href: "/orders" },
                 { label: "My Account", href: "/account" },
                 { label: "Track Order", href: "/orders" },
-                { label: "Contact Us", href: "/contact" },
+                // { label: "Contact Us", href: "/contact" },
               ].map(({ label, href }) => (
                 <li key={label}>
                   <Link
@@ -114,10 +114,10 @@ export default function Footer() {
         <div className="border-t border-[#D2D2D7] pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#86868B]">
           <p>© 2026 GearHouse. All rights reserved. Powered by <span className="text-[#1D1D1F] font-medium">Corban Technologies LTD</span>.</p>
           <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-[#0071E3] transition-colors">
+            <Link href="/" className="hover:text-[#0071E3] transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-[#0071E3] transition-colors">
+            <Link href="/" className="hover:text-[#0071E3] transition-colors">
               Terms of Service
             </Link>
           </div>

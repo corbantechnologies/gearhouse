@@ -114,7 +114,7 @@ export default function OrderPaymentPage({
 
   return (
     <div className="min-h-screen bg-[#F9F7F2] py-8 md:py-12 px-4 md:px-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="container mx-auto">
         <div className="mb-8 flex items-center justify-between">
           <Link
             href="/orders"
