@@ -10,6 +10,7 @@ import UploadProductImages from "@/forms/products/UploadProductImages";
 import UpdateProduct from "@/forms/products/UpdateProduct";
 import UpdateProductVariant from "@/forms/products/UpdateProductVariant";
 import CreateProductVariant from "@/forms/products/CreateProductVariant";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { updateProduct } from "@/services/products";
 import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 import toast from "react-hot-toast";
@@ -24,8 +25,9 @@ import {
   Plus,
   Rocket,
   Loader2,
+  Trash2,
 } from "lucide-react";
-import { ProductVariant } from "@/services/productvariants";
+import { ProductVariant, deleteProductVariant } from "@/services/productvariants";
 
 export default function ProductPage() {
   const params = useParams();
@@ -50,7 +52,10 @@ export default function ProductPage() {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     null,
   );
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [variantToDelete, setVariantToDelete] = useState<ProductVariant | null>(null);
   const [publishing, setPublishing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleEditVariant = (variant: ProductVariant) => {
     setSelectedVariant(variant);
@@ -60,6 +65,28 @@ export default function ProductPage() {
   const handleCloseVariantModal = () => {
     setSelectedVariant(null);
     setIsVariantModalOpen(false);
+  };
+
+  const handleDeleteVariant = (variant: ProductVariant) => {
+    setVariantToDelete(variant);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeleteVariant = async () => {
+    if (!variantToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteProductVariant(variantToDelete.reference, authHeaders);
+      toast.success("Variant deleted successfully");
+      setIsDeleteModalOpen(false);
+      setVariantToDelete(null);
+      refetch();
+    } catch (error) {
+      toast.error("Failed to delete variant");
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handlePublish = async () => {
@@ -326,6 +353,13 @@ export default function ProductPage() {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
+                            <button
+                              onClick={() => handleDeleteVariant(variant)}
+                              className="text-red-500 hover:text-red-700 transition-colors p-1 ml-2"
+                              title="Delete Variant"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -482,6 +516,19 @@ export default function ProductPage() {
             }}
           />
         </VendorModal>
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={confirmDeleteVariant}
+          title="Delete Variant"
+          message={`Are you sure you want to delete the variant with SKU: ${variantToDelete?.sku}? This action cannot be undone.`}
+          confirmLabel="Delete Variant"
+          cancelLabel="Keep Variant"
+          isLoading={isDeleting}
+          variant="danger"
+        />
       </div>
     </div>
   );
