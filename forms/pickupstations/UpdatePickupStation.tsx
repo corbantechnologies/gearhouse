@@ -42,8 +42,8 @@ export default function UpdatePickupStation({
         toast.success("Pickup Station updated successfully");
         if (onSuccess) onSuccess();
       } catch (error) {
+        console.log(error);
         toast.error("Failed to update pickup station");
-        console.error(error);
       } finally {
         setLoading(false);
       }
