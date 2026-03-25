@@ -5,6 +5,7 @@ import { useFormik } from "formik";
 import { createPickupStation } from "@/services/pickupstations";
 import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 import toast from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function CreatePickupStation({
   onSuccess,
@@ -14,6 +15,7 @@ export default function CreatePickupStation({
   currency: string;
 }) {
   const authHeaders = useAxiosAuth();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
 
   const formik = useFormik({
@@ -31,11 +33,24 @@ export default function CreatePickupStation({
       try {
         await createPickupStation(values, authHeaders);
         toast.success("Pickup Station created successfully");
+        queryClient.invalidateQueries({ queryKey: ["pickupstations"] });
         formik.resetForm();
         if (onSuccess) onSuccess();
-      } catch (error) {
-        toast.error("Failed to create pickup station");
-        console.error(error);
+      } catch (error: any) {
+        const errorData = error.response?.data;
+        if (errorData) {
+          // If it's an object with field names as keys
+          if (typeof errorData === "object" && !Array.isArray(errorData)) {
+            Object.keys(errorData).forEach((key) => {
+              const messages = Array.isArray(errorData[key]) ? errorData[key] : [errorData[key]];
+              messages.forEach((msg: string) => toast.error(`${key}: ${msg}`));
+            });
+          } else {
+            toast.error("Failed to create pickup station: " + JSON.stringify(errorData));
+          }
+        } else {
+          toast.error("Failed to create pickup station");
+        }
       } finally {
         setLoading(false);
       }
@@ -44,7 +59,7 @@ export default function CreatePickupStation({
 
   return (
     <form onSubmit={formik.handleSubmit} className="space-y-6 w-full max-w-lg">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div>
           <label
             htmlFor="name"
@@ -60,7 +75,7 @@ export default function CreatePickupStation({
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             value={formik.values.name}
-            className="w-full px-4 py-2 border border-secondary rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+            className="w-full px-4 py-2 border border-secondary rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors text-sm"
           />
         </div>
         <div>
@@ -78,7 +93,7 @@ export default function CreatePickupStation({
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             value={formik.values.city}
-            className="w-full px-4 py-2 border border-secondary rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+            className="w-full px-4 py-2 border border-secondary rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors text-sm"
           />
         </div>
       </div>
@@ -101,7 +116,7 @@ export default function CreatePickupStation({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div>
           <label
             htmlFor="map_link"
@@ -117,7 +132,7 @@ export default function CreatePickupStation({
             onBlur={formik.handleBlur}
             value={formik.values.map_link}
             placeholder="https://maps.google.com/..."
-            className="w-full px-4 py-2 border border-secondary rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+            className="w-full px-4 py-2 border border-secondary rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors text-sm"
           />
         </div>
         <div>
@@ -141,7 +156,7 @@ export default function CreatePickupStation({
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               value={formik.values.cost_to_customer}
-              className="w-full pl-12 pr-4 py-2 border border-secondary rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+              className="w-full pl-12 pr-4 py-2 border border-secondary rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors text-sm"
             />
           </div>
         </div>

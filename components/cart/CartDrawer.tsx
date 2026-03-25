@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import CartItem from "./CartItem";
 import { formatCurrency } from "@/components/dashboard/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface CartDrawerProps {
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { cart, isLoading } = useCart();
+  const router = useRouter();
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -130,13 +132,22 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               </div>
             </div>
 
-            <Link
-              href="/checkout"
-              onClick={onClose}
-              className="flex items-center justify-center gap-2 w-full py-3.5 bg-[#0071E3] text-white rounded-full text-sm font-semibold hover:bg-[#0077ED] active:bg-[#005BB5] transition-all shadow-lg shadow-[#0071E3]/25"
+            <button
+              onClick={() => {
+                onClose();
+                router.push("/checkout");
+              }}
+              className="flex items-center justify-center gap-2 w-full py-3.5 bg-[#1D1D1F] text-white rounded-2xl text-sm font-semibold hover:bg-black active:scale-[0.98] transition-all shadow-lg"
             >
               <Zap className="w-4 h-4 fill-white" />
               Checkout
+            </button>
+            <Link
+              href="/cart"
+              onClick={onClose}
+              className="flex items-center justify-center w-full py-3 text-sm font-medium text-[#0071E3] hover:underline mt-2"
+            >
+              View Full Cart
             </Link>
             <p className="text-[10px] text-[#86868B] text-center mt-3">
               Secure checkout · M-Pesa STK Push

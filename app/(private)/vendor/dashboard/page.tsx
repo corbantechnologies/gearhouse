@@ -5,6 +5,7 @@ import { useFetchAccount } from "@/hooks/accounts/actions";
 import { useFetchCategoriesVendor } from "@/hooks/categories/actions";
 import { useFetchSubCategoriesVendor } from "@/hooks/subcategories/actions";
 import { useFetchPickupStationsVendor } from "@/hooks/pickupstations/actions";
+import { useFetchShippingZonesVendor } from "@/hooks/shippingzones/actions";
 import { useFetchShop } from "@/hooks/shops/actions";
 import {
   LayoutGrid,
@@ -15,6 +16,7 @@ import {
   Package,
   Plus,
   Edit,
+  Truck,
 } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import SectionHeader from "@/components/dashboard/SectionHeader";
@@ -27,6 +29,8 @@ import CreateSubCategory from "@/forms/subcategories/CreateSubCategory";
 import UpdateSubCategory from "@/forms/subcategories/UpdateSubCategory";
 import CreatePickupStation from "@/forms/pickupstations/CreatePickupStation";
 import UpdatePickupStation from "@/forms/pickupstations/UpdatePickupStation";
+import CreateShippingZone from "@/forms/shippingzones/CreateShippingZone";
+import UpdateShippingZone from "@/forms/shippingzones/UpdateShippingZone";
 import UpdateShopForm from "@/forms/shop/UpdateShop";
 import { useFetchProductsVendor } from "@/hooks/products/actions";
 
@@ -46,6 +50,8 @@ export default function VendorDashboard() {
     useState(false);
   const [isUpdatePickupStationModalOpen, setIsUpdatePickupStationModalOpen] =
     useState(false);
+  const [isShippingZoneModalOpen, setIsShippingZoneModalOpen] = useState(false);
+  const [isUpdateShippingZoneModalOpen, setIsUpdateShippingZoneModalOpen] = useState(false);
   const [isShopUpdateModalOpen, setIsShopUpdateModalOpen] = useState(false);
 
   // Selected Item States
@@ -55,6 +61,7 @@ export default function VendorDashboard() {
     useState("");
   const [selectedPickupStationCode, setSelectedPickupStationCode] =
     useState("");
+  const [selectedShippingZoneCode, setSelectedShippingZoneCode] = useState("");
 
   const { data: vendor, isLoading: isLoadingVendor } = useFetchAccount();
   const {
@@ -73,6 +80,11 @@ export default function VendorDashboard() {
     refetch: refetchPickupStations,
   } = useFetchPickupStationsVendor();
   const {
+    data: shippingZones,
+    isLoading: isLoadingShippingZones,
+    refetch: refetchShippingZones,
+  } = useFetchShippingZonesVendor();
+  const {
     data: products,
     isLoading: isLoadingProducts,
     refetch: refetchProducts,
@@ -87,6 +99,7 @@ export default function VendorDashboard() {
     { id: "categories", label: "Categories", icon: LayoutGrid },
     { id: "subcategories", label: "Subcategories", icon: ListTree },
     { id: "pickup-stations", label: "Pickup Stations", icon: MapPin },
+    { id: "shipping-zones", label: "Shipping Zones", icon: Truck },
   ];
 
   const stats = [
@@ -107,6 +120,12 @@ export default function VendorDashboard() {
       value: pickupStations?.length || 0,
       icon: MapPin,
       loading: isLoadingPickupStations,
+    },
+    {
+      title: "Shipping Zones",
+      value: shippingZones?.length || 0,
+      icon: Truck,
+      loading: isLoadingShippingZones,
     },
     {
       title: "Products",
@@ -440,15 +459,15 @@ export default function VendorDashboard() {
 
           {activeTab === "pickup-stations" && (
             <div className="animate-in fade-in duration-500">
-              <div className="flex justify-between items-start md:items-center mb-6">
-                <SectionHeader
-                  title="Pickup Stations"
-                  description="Customer delivery points and their operational status."
-                />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-[#1D1D1F] tracking-tight">Pickup Stations</h2>
+                  <p className="text-[#86868B] text-sm mt-1">Manage your delivery network and collection points.</p>
+                </div>
                 {vendor?.is_superuser && (
                   <button
                     onClick={() => setIsPickupStationModalOpen(true)}
-                    className="inline-flex items-center justify-center rounded-sm bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                    className="flex items-center justify-center px-6 py-2.5 bg-[#0071E3] text-white rounded-xl text-sm font-bold hover:bg-[#0077ED] transition-all shadow-md shadow-[#0071E3]/20"
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Station
@@ -588,8 +607,98 @@ export default function VendorDashboard() {
                       </div>
                     ))
                   ) : (
-                    <div className="p-12 text-center text-sm text-[#86868B]">No pickup stations yet.</div>
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                      <div className="w-16 h-16 rounded-2xl bg-[#F5F5F7] border border-[#D2D2D7] flex items-center justify-center mb-4">
+                        <MapPin className="w-8 h-8 text-[#86868B]" />
+                      </div>
+                      <p className="text-lg font-bold text-[#1D1D1F]">No pickup stations yet</p>
+                      <p className="text-sm text-[#86868B] mt-1 max-w-xs text-center">Add pickup stations to offer convenient delivery options to your customers.</p>
+                    </div>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === "shipping-zones" && (
+            <div className="animate-in fade-in duration-500">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-[#1D1D1F] tracking-tight">Shipping Zones</h2>
+                  <p className="text-[#86868B] text-sm mt-1">Configure regional delivery routes and costs.</p>
+                </div>
+                {vendor?.is_superuser && (
+                  <button
+                    onClick={() => setIsShippingZoneModalOpen(true)}
+                    className="flex items-center justify-center px-6 py-2.5 bg-[#0071E3] text-white rounded-xl text-sm font-bold hover:bg-[#0077ED] transition-all shadow-md shadow-[#0071E3]/20"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Zone
+                  </button>
+                )}
+              </div>
+              <div className="bg-white border border-[#D2D2D7] rounded-2xl overflow-hidden">
+                <div className="overflow-x-auto hidden sm:block">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-[#F5F5F7] border-b border-[#D2D2D7]">
+                        <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">Zone Name</th>
+                        <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">Code</th>
+                        <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">Delivery Cost</th>
+                        <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">ETA</th>
+                        <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">Status</th>
+                        <th className="px-6 py-3.5 text-[10px] uppercase tracking-widest font-semibold text-[#0071E3]">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F5F5F7]">
+                      {isLoadingShippingZones ? (
+                        Array(3)
+                          .fill(0)
+                          .map((_, i) => <SkeletonRow key={i} />)
+                      ) : shippingZones && shippingZones.length > 0 ? (
+                        shippingZones.map((zone) => (
+                          <tr key={zone.zone_code} className="hover:bg-[#F5F5F7] transition-colors">
+                            <td className="px-6 py-4">
+                              <p className="font-semibold text-[#1D1D1F] text-sm">{zone.name}</p>
+                              <p className="text-[10px] text-[#86868B] truncate max-w-[200px]">{zone.description}</p>
+                            </td>
+                            <td className="px-6 py-4 text-xs font-mono text-[#86868B]">{zone.zone_code}</td>
+                            <td className="px-6 py-4 text-sm font-medium text-[#1D1D1F]">
+                              {vendor?.shop?.currency || "$"}{zone.delivery_cost}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-[#6E6E73]">{zone.estimated_delivery_days} days</td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-tighter ${zone.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                                {zone.is_active ? "Active" : "Inactive"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              {vendor?.is_superuser && (
+                                <button
+                                  onClick={() => { setSelectedShippingZoneCode(zone.zone_code); setIsUpdateShippingZoneModalOpen(true); }}
+                                  className="text-[#86868B] hover:text-[#0071E3] transition-colors"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-20 text-center">
+                            <div className="flex flex-col items-center justify-center py-10">
+                              <div className="w-16 h-16 rounded-2xl bg-[#F5F5F7] border border-[#D2D2D7] flex items-center justify-center mb-4">
+                                <Truck className="w-8 h-8 text-[#86868B]" />
+                              </div>
+                              <p className="text-lg font-bold text-[#1D1D1F]">No shipping zones yet</p>
+                              <p className="text-sm text-[#86868B] mt-1 max-w-sm">Configure regional delivery routes and their associated costs for your customers.</p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -695,6 +804,37 @@ export default function VendorDashboard() {
               onSuccess={() => {
                 setIsUpdatePickupStationModalOpen(false);
                 refetchPickupStations();
+              }}
+            />
+          )}
+        </VendorModal>
+
+        <VendorModal
+          isOpen={isShippingZoneModalOpen}
+          onClose={() => setIsShippingZoneModalOpen(false)}
+          title="Create New Shipping Zone"
+        >
+          <CreateShippingZone
+            currency={vendor?.shop?.currency || "$"}
+            onSuccess={() => {
+              setIsShippingZoneModalOpen(false);
+              refetchShippingZones();
+            }}
+          />
+        </VendorModal>
+
+        <VendorModal
+          isOpen={isUpdateShippingZoneModalOpen}
+          onClose={() => setIsUpdateShippingZoneModalOpen(false)}
+          title="Update Shipping Zone"
+        >
+          {selectedShippingZoneCode && (
+            <UpdateShippingZone
+              zone_code={selectedShippingZoneCode}
+              currency={vendor?.shop?.currency || "$"}
+              onSuccess={() => {
+                setIsUpdateShippingZoneModalOpen(false);
+                refetchShippingZones();
               }}
             />
           )}

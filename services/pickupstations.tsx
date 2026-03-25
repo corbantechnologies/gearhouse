@@ -7,13 +7,6 @@ import { PaginatedResponse } from "./general";
 export interface PickupStation {
   name: string;
   location: string;
-  shop: string;
-  shop_details: {
-    shop_code: string;
-    name: string;
-    currency: string;
-    logo: string | null;
-  };
   city: string;
   map_link: string;
   is_active: boolean;

@@ -2,7 +2,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { checkoutCart } from "@/services/cart";
+import { checkoutCart, checkoutCartData } from "@/services/cart";
 import useAxiosAuth from "../authentication/useAxiosAuth";
 import toast from "react-hot-toast";
 
@@ -11,7 +11,7 @@ export const useCheckoutCart = () => {
   const header = useAxiosAuth();
 
   return useMutation({
-    mutationFn: (data: { pickup_station: string; phone_number: string }) =>
+    mutationFn: (data: checkoutCartData) =>
       checkoutCart(data, header),
     onSuccess: (data) => {
       console.log("Checkout successful, received data:", data);
