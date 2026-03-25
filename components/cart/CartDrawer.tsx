@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
-import { X, ShoppingBag, Loader2, Zap } from "lucide-react";
+import { X, ShoppingBag, Loader2, Zap, Lock } from "lucide-react";
 import { useEffect, useRef } from "react";
 import CartItem from "./CartItem";
 import { formatCurrency } from "@/components/dashboard/utils";
@@ -14,7 +14,7 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const { cart, isLoading } = useCart();
+  const { cart, isLoading, isGuest } = useCart();
   const router = useRouter();
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -79,6 +79,27 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             <div className="h-full flex flex-col items-center justify-center gap-3 py-20">
               <Loader2 className="w-7 h-7 animate-spin text-[#0071E3]" />
               <p className="text-sm text-[#86868B]">Loading your cart...</p>
+            </div>
+          ) : isGuest ? (
+            <div className="h-full flex flex-col items-center justify-center gap-4 text-center py-20">
+              <div className="w-16 h-16 bg-[#F5F5F7] rounded-2xl flex items-center justify-center">
+                <Lock className="w-7 h-7 text-[#D2D2D7]" />
+              </div>
+              <div>
+                <p className="text-base font-semibold text-[#1D1D1F]">
+                  Sign in to your account
+                </p>
+                <p className="text-sm text-[#86868B] mt-1 max-w-[200px] mx-auto">
+                  Your cart items are saved to your account.
+                </p>
+              </div>
+              <Link
+                href="/login"
+                onClick={onClose}
+                className="mt-2 px-6 py-2.5 bg-[#0071E3] text-white rounded-full text-sm font-semibold hover:bg-[#0077ED] transition-colors"
+              >
+                Sign In
+              </Link>
             </div>
           ) : !cart || cart.items.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center gap-4 text-center py-20">

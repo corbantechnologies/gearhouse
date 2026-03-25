@@ -1,14 +1,14 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
-import { ShoppingBag, ArrowRight, Loader2, Package, Trash2, ChevronLeft } from "lucide-react";
+import { ShoppingBag, ArrowRight, Loader2, Package, Trash2, ChevronLeft, Lock } from "lucide-react";
 import Link from "next/link";
 import CartItem from "@/components/cart/CartItem";
 import { formatCurrency } from "@/components/dashboard/utils";
 import { useRouter } from "next/navigation";
 
 export default function CartPage() {
-  const { cart, isLoading } = useCart();
+  const { cart, isLoading, isGuest } = useCart();
   const router = useRouter();
 
   if (isLoading) {
@@ -16,6 +16,27 @@ export default function CartPage() {
       <div className="min-h-[70vh] flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-[#0071E3]" />
         <p className="text-[#86868B] animate-pulse">Loading your selection...</p>
+      </div>
+    );
+  }
+
+  if (isGuest) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4">
+        <div className="w-20 h-20 bg-[#F5F5F7] rounded-3xl flex items-center justify-center mb-6 animate-in zoom-in duration-500">
+          <Lock className="w-10 h-10 text-[#D2D2D7]" />
+        </div>
+        <h1 className="text-2xl font-bold text-[#1D1D1F] mb-2">Sign in to see your bag.</h1>
+        <p className="text-[#86868B] max-w-sm mb-8">
+          Your saved items will appear here once you sign in to your account.
+        </p>
+        <Link
+          href="/login"
+          className="px-8 py-3 bg-[#0071E3] text-white rounded-full font-semibold hover:bg-[#0077ED] transition-all flex items-center gap-2 group"
+        >
+          Sign In
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </Link>
       </div>
     );
   }
