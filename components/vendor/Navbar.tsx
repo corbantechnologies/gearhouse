@@ -15,6 +15,7 @@ import {
   LucideShoppingBasket,
   BarChart3,
   Zap,
+  Truck,
 } from "lucide-react";
 
 export default function VendorNavbar() {
@@ -25,6 +26,7 @@ export default function VendorNavbar() {
   const navLinks = [
     { name: "Dashboard", href: "/vendor/dashboard", icon: LayoutDashboard },
     { name: "Products", href: "/vendor/products", icon: ShoppingBag },
+    { name: "Logistics", href: "/vendor/logistics", icon: Truck },
     { name: "Shop Orders", href: "/vendor/shop-orders", icon: LucideShoppingBasket },
     { name: "Analytics", href: "/vendor/analytics", icon: BarChart3 },
     { name: "Settings", href: "/vendor/settings", icon: Settings },
