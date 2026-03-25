@@ -31,7 +31,7 @@ export default function UpdatePickupStation({
       city: station?.city || "",
       map_link: station?.map_link || "",
       cost_to_customer: station?.cost_to_customer || "",
-      estimated_delivery_days: station?.estimated_delivery_days || 1,
+      estimated_delivery_days: station?.estimated_delivery_days || 0,
       is_active: station?.is_active ?? true,
     },
     enableReinitialize: true,
