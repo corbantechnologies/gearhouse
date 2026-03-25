@@ -3,7 +3,7 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   images: {
-    // Remove `domains` completely — it is deprecated and triggers the warning
+    domains: ["res.cloudinary.com"],
     remotePatterns: [
       {
         protocol: "https",
@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withPWA({
+const pwaWrapper = withPWA({
   dest: "public",
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
@@ -33,4 +33,6 @@ export default withPWA({
   workboxOptions: {
     disableDevLogs: true,
   },
-})(nextConfig);
+});
+
+export default process.env.NODE_ENV === "production" ? pwaWrapper(nextConfig) : nextConfig;
