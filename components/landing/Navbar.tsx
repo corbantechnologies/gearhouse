@@ -34,13 +34,13 @@ export default function Navbar() {
   return (
     <>
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#D2D2D7]">
-        <div className="max-w-7xl mx-auto px-6 h-[52px] flex items-center justify-between">
+        <div className="container mx-auto px-6 h-[52px] flex items-center justify-between">
           {/* Logo */}
           <Link
             href="/"
             className="flex items-center z-50 relative outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] rounded-lg transition-opacity hover:opacity-90"
           >
-            <img src="/logo.svg" alt="GearHouse" className="h-8 w-auto" />
+            <img src="/logo.svg" alt="GearHouse Africa" className="h-8 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}

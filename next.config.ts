@@ -3,24 +3,25 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["res.cloudinary.com"],
+    // Remove `domains` completely — it is deprecated and triggers the warning
     remotePatterns: [
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
+        // Optional: be more specific if you want (recommended for security)
+        // pathname: "/**",   // allows all paths under the domain
       },
       {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
-    ]
+    ],
   },
-  turbopack: {
 
-  },
+  // Remove the empty turbopack object (not needed)
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
-  }
+  },
 };
 
 export default withPWA({
