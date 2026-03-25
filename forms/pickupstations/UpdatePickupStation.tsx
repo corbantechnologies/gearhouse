@@ -6,6 +6,7 @@ import { updatePickupStation } from "@/services/pickupstations";
 import { useFetchPickupStation } from "@/hooks/pickupstations/actions";
 import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 import toast from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function UpdatePickupStation({
   station_code,
@@ -17,6 +18,7 @@ export default function UpdatePickupStation({
   currency: string;
 }) {
   const authHeaders = useAxiosAuth();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const {
     data: station,
@@ -40,6 +42,11 @@ export default function UpdatePickupStation({
       try {
         await updatePickupStation(station_code, values, authHeaders);
         toast.success("Pickup Station updated successfully");
+        
+        // Invalidate both the list and the specific station detail
+        queryClient.invalidateQueries({ queryKey: ["pickupstations"] });
+        queryClient.invalidateQueries({ queryKey: ["pickupstation", station_code] });
+        
         if (onSuccess) onSuccess();
       } catch (error) {
         console.log(error);
