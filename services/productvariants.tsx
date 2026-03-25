@@ -9,7 +9,7 @@ export interface ProductVariant {
   id: string;
   product: string;
   product_name: string;
-  attributes: {};
+  attributes: Record<string, any>;
   price: string;
   cost_price: string;
   discounted_price: string | null;
@@ -23,7 +23,7 @@ export interface ProductVariant {
 
 export interface createProductVariant {
   product: string; // the product_code
-  attributes: {};
+  attributes: Record<string, any>;
   price: string;
   cost_price: string;
   discounted_price: string | null;
@@ -33,7 +33,7 @@ export interface createProductVariant {
 
 export interface updateProductVariant {
   product: string;
-  attributes: {};
+  attributes: Record<string, any>;
   price: string;
   cost_price: string;
   discounted_price: string | null;
