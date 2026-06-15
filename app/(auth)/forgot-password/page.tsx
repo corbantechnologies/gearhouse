@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { ForgotPasswordSchema } from "@/validation";
 import { forgotPassword } from "@/services/accounts";
+import { Zap } from "lucide-react";
 
 export default function ForgotPassword() {
     const [loading, setLoading] = useState(false);
@@ -30,34 +31,28 @@ export default function ForgotPassword() {
 
     return (
         <div className="min-h-screen flex w-full bg-background">
-            {/* Left Column - Image */}
-            <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-secondary/20">
-                <div className="absolute inset-0 bg-primary/10 z-10 mix-blend-multiply" />
-                <div className="absolute inset-0 flex flex-col justify-between p-12 z-20">
-                    <div className="text-2xl font-serif font-bold text-white tracking-wide">
-                        Clate Cosmetics
-                    </div>
-                    <div className="text-white">
-                        <p className="text-3xl font-serif leading-tight mb-4">
-                            "Recover access <br />to your beauty world."
-                        </p>
-                    </div>
-                </div>
-                <div className="absolute inset-0 z-0">
-                    <img
-                        src="/images/login-bg.png"
-                        alt="Background Texture"
-                        className="w-full h-full object-cover"
-                    />
-                </div>
-            </div>
+      {/* Left panel — brand */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#1D1D1F] flex-col justify-between p-14">
+        <Link href="/" className="flex items-center gap-2">
+          <Zap className="w-6 h-6 text-[#0071E3] fill-[#0071E3]" />
+          <span className="text-xl font-bold text-white tracking-tight">GearHouse</span>
+        </Link>
+        <div>
+          <p className="text-3xl font-bold text-white leading-snug mb-4 tracking-tight">
+            "The right gear.<br />The right price.<br />
+            <span className="text-[#0071E3]">Every time.</span>"
+          </p>
+          <p className="text-sm text-white/40">— The GearHouse Promise</p>
+        </div>
+        <p className="text-xs text-white/30">Powered by Corban Technologies LTD</p>
+      </div>
 
             {/* Right Column - Form */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-12 animate-in fade-in slide-in-from-right-10 duration-500">
                 <div className="w-full max-w-md space-y-8">
                     <div className="text-center lg:text-left">
                         <Link href="/" className="lg:hidden text-2xl font-serif font-bold text-foreground tracking-wide mb-8 block">
-                            Clate Cosmetics
+                            GearHouse
                         </Link>
                         <h1 className="text-3xl md:text-4xl font-serif text-foreground mb-3">Forgot Password?</h1>
                         <p className="text-foreground/60">

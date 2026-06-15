@@ -50,7 +50,7 @@ export default function Login() {
         <Link href="/" className="flex items-center gap-2">
           <Zap className="w-6 h-6 text-[#0071E3] fill-[#0071E3]" />
           <span className="text-xl font-bold text-white tracking-tight">GearHouse</span>
-        </Link>
+        </Link>z
         <div>
           <p className="text-3xl font-bold text-white leading-snug mb-4 tracking-tight">
             "The right gear.<br />The right price.<br />
