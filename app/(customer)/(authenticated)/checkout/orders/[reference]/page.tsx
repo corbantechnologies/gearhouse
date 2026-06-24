@@ -43,7 +43,7 @@ export default function OrderPaymentPage() {
             router.push(`/orders/${reference}`);
           }, 2000);
           setIsPolling(false);
-        } else if (["FAILED", "CANCELLED", "REVERSED"].includes(currentStatus)) {
+        } else if (typeof currentStatus === "string" && ["FAILED", "CANCELLED", "REVERSED"].includes(currentStatus)) {
           clearInterval(interval);
           setPaymentMessage(`Payment ${currentStatus.toLowerCase()}. Please try again.`);
           toast.error(`Payment ${currentStatus}`);
@@ -157,7 +157,7 @@ export default function OrderPaymentPage() {
           {!isPolling && order.payment_status !== "COMPLETED" && order.payment_status !== "PAID" && (
             <Formik
               initialValues={{
-                phone_number: order.customer_phone || "",
+                phone_number: order.phone_number || "",
               }}
               validationSchema={validationSchema}
               onSubmit={async (values) => {
