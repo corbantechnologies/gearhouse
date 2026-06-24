@@ -20,6 +20,7 @@ export interface Product {
   is_active: boolean;
   features: {};
   images: {
+    reference: string;
     image: string;
     created_at: string;
     updated_at: string;
@@ -127,6 +128,13 @@ export const deleteProduct = async (
     headers,
   );
   return response.data;
+};
+
+export const deleteProductImage = async (
+  reference: string,
+  headers: { headers: { Authorization: string } },
+): Promise<void> => {
+  await apiActions.delete(`/api/v1/productimages/${reference}/`, headers);
 };
 
 // Public Views
