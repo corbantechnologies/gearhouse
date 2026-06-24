@@ -89,7 +89,7 @@ export default function CheckoutPage() {
       // ── Only reaches here if request was successful ──
       toast.success("Order placed successfully!");
 
-      router.push(`/checkout/orders/${order.order_reference}`);
+      router.push(`/orders/${order.order_reference}`);
     } catch (error: any) {
       console.error("Checkout failed:", error);
 
