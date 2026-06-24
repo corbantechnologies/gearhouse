@@ -251,7 +251,7 @@ export default function InventoryPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] pb-12">
-      <div className="container mx-auto px-4 sm:px-6 py-6 md:py-8">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 py-6 md:py-8">
         <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <SectionHeader
             title="Inventory"
@@ -318,7 +318,7 @@ export default function InventoryPage() {
                 <p className="text-sm font-semibold text-[#1D1D1F]">No products found</p>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-[#D2D2D7] overflow-hidden">
+              <div className="bg-white rounded-2xl border border-[#D2D2D7] overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-[#F5F5F7]">
@@ -397,7 +397,7 @@ export default function InventoryPage() {
                 </p>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-[#D2D2D7] overflow-hidden">
+              <div className="bg-white rounded-2xl border border-[#D2D2D7] overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-[#F5F5F7]">
@@ -452,7 +452,7 @@ export default function InventoryPage() {
         )}
 
         {tab === "history" && (
-          <div className="bg-white rounded-2xl border border-[#D2D2D7] overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[#D2D2D7] overflow-x-auto">
             {adjustments.length === 0 ? (
               <div className="py-20 flex flex-col items-center gap-3">
                 <History className="w-10 h-10 text-[#D2D2D7]" />

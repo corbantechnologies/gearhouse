@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" fill="none">
+  <!-- Badge background -->
+  <rect width="44" height="44" x="2" y="2" rx="10" fill="#0071E3"/>
+  <!-- Lightning bolt / zap icon (centered in 48x48 badge) -->
+  <path d="M26 8L14 26h10l-2 14L34 22H24L26 8z" fill="white"/>
+  <!-- Wordmark -->
+  <text x="56" y="32" font-family="'Space Grotesk', 'Inter', system-ui, sans-serif" font-weight="700" font-size="22" fill="#1D1D1F" letter-spacing="-0.5">GearHouse</text>
+</svg>

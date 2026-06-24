@@ -363,7 +363,7 @@ export default function POSPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] pb-12">
-      <div className="container mx-auto px-4 sm:px-6 py-6 md:py-8">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 py-6 md:py-8">
         <div className="mb-6">
           <SectionHeader
             title="POS Register"

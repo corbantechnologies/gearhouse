@@ -36,7 +36,7 @@ export default function LogisticsPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] py-8 md:py-12">
-      <div className="container mx-auto px-4 md:px-6">
+      <div className="w-full max-w-[1920px] mx-auto px-4 md:px-6">
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <SectionHeader 
