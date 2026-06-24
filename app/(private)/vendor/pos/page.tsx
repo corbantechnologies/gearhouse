@@ -25,7 +25,9 @@ import {
   Receipt,
   Clock,
   User,
+  Info,
 } from "lucide-react";
+import Link from "next/link";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -364,11 +366,18 @@ export default function POSPage() {
   return (
     <div className="min-h-screen bg-[#F5F5F7] pb-12">
       <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 py-6 md:py-8">
-        <div className="mb-6">
+        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <SectionHeader
             title="POS Register"
             description="Log walk-in sales and manage in-store transactions."
           />
+          <Link
+            href="/vendor/pos/info"
+            className="flex items-center gap-2 text-sm text-[#0071E3] hover:underline font-medium"
+          >
+            <Info className="w-4 h-4" />
+            How to use POS
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
