@@ -14,8 +14,9 @@ import {
   ShoppingBag,
   LucideShoppingBasket,
   BarChart3,
-  Zap,
   Truck,
+  ScanLine,
+  Boxes,
 } from "lucide-react";
 
 export default function VendorNavbar() {
@@ -28,13 +29,15 @@ export default function VendorNavbar() {
     { name: "Products", href: "/vendor/products", icon: ShoppingBag },
     { name: "Logistics", href: "/vendor/logistics", icon: Truck },
     { name: "Shop Orders", href: "/vendor/shop-orders", icon: LucideShoppingBasket },
+    { name: "POS Register", href: "/vendor/pos", icon: ScanLine },
+    { name: "Inventory", href: "/vendor/inventory", icon: Boxes },
     { name: "Analytics", href: "/vendor/analytics", icon: BarChart3 },
     { name: "Settings", href: "/vendor/settings", icon: Settings },
   ];
 
   return (
     <nav className="bg-white border-b border-[#D2D2D7] sticky top-0 z-50">
-      <div className="container mx-auto px-4 md:px-6">
+      <div className="w-full max-w-[1920px] mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-14">
 
           {/* Brand */}
