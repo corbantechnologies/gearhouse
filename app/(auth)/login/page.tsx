@@ -53,8 +53,8 @@ export default function Login() {
         </Link>z
         <div>
           <p className="text-3xl font-bold text-white leading-snug mb-4 tracking-tight">
-            "The right gear.<br />The right price.<br />
-            <span className="text-[#0071E3]">Every time.</span>"
+            &quot;The right gear.<br />The right price.<br />
+            <span className="text-[#0071E3]">Every time.</span>&quot;
           </p>
           <p className="text-sm text-white/40">— The GearHouse Promise</p>
         </div>

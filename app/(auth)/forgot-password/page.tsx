@@ -44,11 +44,11 @@ export default function ForgotPassword() {
         </Link>
         <div>
           <p className="text-3xl font-bold text-white leading-snug mb-4 tracking-tight">
-            "The right gear.
+            &quot;The right gear.
             <br />
             The right price.
             <br />
-            <span className="text-[#0071E3]">Every time.</span>"
+            <span className="text-[#0071E3]">Every time.</span>&quot;
           </p>
           <p className="text-sm text-white/40">— The GearHouse Promise</p>
         </div>
@@ -71,7 +71,7 @@ export default function ForgotPassword() {
               Forgot Password?
             </h1>
             <p className="text-foreground/60">
-              Enter your email address and we'll send you a link to reset your
+              Enter your email address and we&apos;ll send you a link to reset your
               password.
             </p>
           </div>
