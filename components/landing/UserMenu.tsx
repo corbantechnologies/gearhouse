@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { User, LogOut, ShoppingBag, Package } from "lucide-react";
+import { User, LogOut, ShoppingBag, Package, Store } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useSession, signOut } from "next-auth/react";
 import { useFetchAccount } from "@/hooks/accounts/actions";
@@ -75,6 +75,18 @@ export default function UserMenu() {
               Cart
             </Link>
           </DropdownMenu.Item>
+
+          {user?.is_vendor && (
+            <DropdownMenu.Item asChild className="outline-none">
+              <Link
+                href="/vendor/dashboard"
+                className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-xl cursor-pointer transition-colors"
+              >
+                <Store className="w-4 h-4 text-[#6E6E73]" />
+                Vendor Dashboard
+              </Link>
+            </DropdownMenu.Item>
+          )}
 
           <DropdownMenu.Separator className="h-px bg-[#F5F5F7] my-1.5" />
 
