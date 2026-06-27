@@ -34,6 +34,7 @@ import {
   Info,
   LogOut,
   Gift,
+  Monitor,
 } from "lucide-react";
 import Link from "next/link";
 import { OpenShiftModal, CloseShiftModal } from "./ShiftModals";
@@ -411,6 +412,11 @@ export default function POSPage() {
     setSuccessRef(ref);
     setCart([]);
     clearSelectedCustomer();
+    
+    // Trigger refetch of critical data
+    queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    queryClient.invalidateQueries({ queryKey: ["possales"] });
+    queryClient.invalidateQueries({ queryKey: ["walkincustomers"] });
   };
 
   if (shiftLoading) {
@@ -465,12 +471,27 @@ export default function POSPage() {
                 placeholder="Search products by name or SKU…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
+                disabled={!currentShift}
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
             {/* Product Grid */}
-            {inventoryLoading ? (
+            {!currentShift && !shiftLoading ? (
+              <div className="py-20 flex flex-col items-center gap-3 bg-white rounded-2xl border border-dashed border-[#D2D2D7]">
+                <Monitor className="w-10 h-10 text-[#D2D2D7]" />
+                <p className="text-sm font-semibold text-[#1D1D1F]">Shift Closed</p>
+                <p className="text-xs text-[#86868B] text-center max-w-sm">
+                  You must open a shift to view products and process sales.
+                </p>
+                <button
+                  onClick={() => setIsOpenShiftModalOpen(true)}
+                  className="mt-2 px-4 py-2 bg-[#0071E3] text-white rounded-xl text-sm font-semibold hover:bg-[#0077ED] transition-colors"
+                >
+                  Open Shift
+                </button>
+              </div>
+            ) : inventoryLoading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {Array(9)
                   .fill(0)
@@ -687,7 +708,8 @@ export default function POSPage() {
             {cart.length > 0 && (
               <button
                 onClick={() => setIsCheckoutModalOpen(true)}
-                className="w-full py-4 bg-[#0071E3] text-white rounded-2xl text-base font-bold hover:bg-[#0077ED] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm"
+                disabled={!currentShift}
+                className="w-full py-4 bg-[#0071E3] text-white rounded-2xl text-base font-bold hover:bg-[#0077ED] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#0071E3]"
               >
                 Checkout • {formatKES(cartTotal, currency)}
                 <ChevronRight className="w-5 h-5" />
