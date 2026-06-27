@@ -160,7 +160,7 @@ export const CloseShiftModal = ({
     }),
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        await closeShift({ closing_float: values.floatAmount }, { headers: { Authorization: `Bearer ${token}` } });
+        await closeShift({ closing_float: values.floatAmount }, token);
         queryClient.invalidateQueries({ queryKey: ["currentShift"] });
         queryClient.invalidateQueries({ queryKey: ["posshifts"] });
         onClose();
