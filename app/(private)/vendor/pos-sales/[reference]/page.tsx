@@ -33,7 +33,7 @@ export default function POSSaleDetailsPage() {
         toast.success("Receipt downloaded!");
       },
       onError: (err: any) => {
-        console.log(err);
+        // console.log(err);
         toast.error(err?.response?.data?.error || "Failed to download receipt.");
       }
     });
