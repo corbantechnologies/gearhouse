@@ -20,6 +20,9 @@ import {
   Users,
   Receipt,
   ClipboardList,
+  Store,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
 export default function VendorNavbar() {
@@ -27,27 +30,47 @@ export default function VendorNavbar() {
   const { data: vendor } = useFetchAccount();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const allNavLinks = [
+  const [isPosDropdownOpen, setIsPosDropdownOpen] = useState(false);
+
+  // Grouped Navigation Links
+  const mainNavLinks = [
     { name: "Dashboard", href: "/vendor/dashboard", icon: LayoutDashboard },
     { name: "Products", href: "/vendor/products", icon: ShoppingBag },
     { name: "Logistics", href: "/vendor/logistics", icon: Truck },
     { name: "Shop Orders", href: "/vendor/shop-orders", icon: LucideShoppingBasket },
     { name: "Purchase Orders", href: "/vendor/purchase-orders", icon: Boxes },
-    { name: "POS Sales", href: "/vendor/pos-sales", icon: Receipt },
-    { name: "POS Shifts", href: "/vendor/pos-shifts", icon: ClipboardList },
-    { name: "Customers", href: "/pos/customers", icon: Users },
-    { name: "POS Settings", href: "/pos/settings", icon: Settings },
-    { name: "POS Register", href: "/pos/register", icon: ScanLine },
     { name: "Inventory", href: "/vendor/inventory", icon: Boxes },
     { name: "Analytics", href: "/vendor/analytics", icon: BarChart3 },
     { name: "Settings", href: "/vendor/settings", icon: Settings },
   ];
 
+  const posNavLinks = [
+    { name: "POS Register", href: "/pos/register", icon: ScanLine },
+    { name: "Customers", href: "/pos/customers", icon: Users },
+    { name: "POS Sales", href: "/vendor/pos-sales", icon: Receipt },
+    { name: "POS Shifts", href: "/vendor/pos-shifts", icon: ClipboardList },
+    { name: "POS Settings", href: "/pos/settings", icon: Settings },
+  ];
+
   const isStrictlyPOSStaff = vendor?.is_pos_staff && !vendor?.is_vendor && !vendor?.is_superuser;
 
-  const navLinks = isStrictlyPOSStaff
-    ? allNavLinks.filter(link => ["POS Register", "Customers", "Inventory"].includes(link.name))
-    : allNavLinks;
+  const filteredMainNavLinks = isStrictlyPOSStaff
+    ? mainNavLinks.filter((link) => ["Inventory"].includes(link.name))
+    : mainNavLinks;
+
+  const filteredPosNavLinks = isStrictlyPOSStaff
+    ? posNavLinks.filter((link) => ["POS Register", "Customers"].includes(link.name))
+    : posNavLinks;
+
+  // Open the dropdown automatically if we are currently on a POS page
+  React.useEffect(() => {
+    const isPosActive = posNavLinks.some(
+      (link) => pathname === link.href || pathname.startsWith(link.href + "/")
+    );
+    if (isPosActive) {
+      setIsPosDropdownOpen(true);
+    }
+  }, [pathname]);
 
   return (
     <>
@@ -132,7 +155,7 @@ export default function VendorNavbar() {
 
             {/* Links */}
             <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-              {navLinks.map((link) => {
+              {filteredMainNavLinks.map((link) => {
                 const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
                 return (
                   <Link
@@ -150,6 +173,49 @@ export default function VendorNavbar() {
                   </Link>
                 );
               })}
+
+              {/* POS Dropdown */}
+              {filteredPosNavLinks.length > 0 && (
+                <div className="pt-2">
+                  <button
+                    onClick={() => setIsPosDropdownOpen(!isPosDropdownOpen)}
+                    className="w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-medium text-[#6E6E73] hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Store className="w-5 h-5" />
+                      Point of Sale
+                    </div>
+                    {isPosDropdownOpen ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    )}
+                  </button>
+                  
+                  {isPosDropdownOpen && (
+                    <div className="mt-1 space-y-1 pl-4">
+                      {filteredPosNavLinks.map((link) => {
+                        const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+                        return (
+                          <Link
+                            key={link.name}
+                            href={link.href}
+                            onClick={() => setIsDrawerOpen(false)}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                              isActive
+                                ? "bg-[#0071E3]/10 text-[#0071E3]"
+                                : "text-[#6E6E73] hover:bg-[#F5F5F7] hover:text-[#1D1D1F]"
+                            }`}
+                          >
+                            <link.icon className="w-4 h-4" />
+                            {link.name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Drawer Footer / User Mobile */}
