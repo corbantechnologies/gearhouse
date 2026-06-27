@@ -61,7 +61,6 @@ export default function POSConfigSection() {
 
       <div className="p-4 md:p-8">
         <form onSubmit={formik.handleSubmit} className="space-y-6 max-w-xl">
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -74,14 +73,19 @@ export default function POSConfigSection() {
                 min="0"
                 {...formik.getFieldProps("tax_rate")}
                 className={`w-full h-11 px-4 bg-[#F5F5F7] border rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
-                  formik.touched.tax_rate && formik.errors.tax_rate ? "border-red-500" : "border-transparent"
+                  formik.touched.tax_rate && formik.errors.tax_rate
+                    ? "border-red-500"
+                    : "border-transparent"
                 }`}
               />
               {formik.touched.tax_rate && formik.errors.tax_rate ? (
-                <p className="text-[10px] text-red-500 mt-1.5 leading-relaxed">{formik.errors.tax_rate as string}</p>
+                <p className="text-[10px] text-red-500 mt-1.5 leading-relaxed">
+                  {formik.errors.tax_rate as string}
+                </p>
               ) : (
                 <p className="text-[10px] text-[#86868B] mt-1.5 leading-relaxed">
-                  Applied to all POS sales. Set to 0 if tax is included in product prices.
+                  Applied to all POS sales. Set to 0 if tax is included in
+                  product prices.
                 </p>
               )}
             </div>
@@ -97,14 +101,21 @@ export default function POSConfigSection() {
                 step="0.1"
                 {...formik.getFieldProps("loyalty_points_per_unit")}
                 className={`w-full h-11 px-4 bg-[#F5F5F7] border rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
-                  formik.touched.loyalty_points_per_unit && formik.errors.loyalty_points_per_unit ? "border-red-500" : "border-transparent"
+                  formik.touched.loyalty_points_per_unit &&
+                  formik.errors.loyalty_points_per_unit
+                    ? "border-red-500"
+                    : "border-transparent"
                 }`}
               />
-              {formik.touched.loyalty_points_per_unit && formik.errors.loyalty_points_per_unit ? (
-                <p className="text-[10px] text-red-500 mt-1.5 leading-relaxed">{formik.errors.loyalty_points_per_unit as string}</p>
+              {formik.touched.loyalty_points_per_unit &&
+              formik.errors.loyalty_points_per_unit ? (
+                <p className="text-[10px] text-red-500 mt-1.5 leading-relaxed">
+                  {formik.errors.loyalty_points_per_unit as string}
+                </p>
               ) : (
                 <p className="text-[10px] text-[#86868B] mt-1.5 leading-relaxed">
-                  Number of points awarded per 1 {vendor?.shop?.currency} spent. Example: 0.1 means 10 points per 100 spent.
+                  Number of points awarded per 1 {vendor?.shop?.currency} spent.
+                  Example: 10 means KES 10 = 1 point.
                 </p>
               )}
             </div>
