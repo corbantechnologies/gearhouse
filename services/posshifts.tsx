@@ -33,7 +33,7 @@ export const getCurrentShift = async (headers: {
   try {
     const response: AxiosResponse<POSShift> = await apiActions.get(
       `/api/v1/posshifts/current/`,
-      headers
+      headers,
     );
     return response.data;
   } catch (error: any) {
@@ -46,24 +46,25 @@ export const getCurrentShift = async (headers: {
 
 export const openShift = async (
   data: { till: string; opening_float: number },
-  headers: { headers: { Authorization: string } }
+  headers: { headers: { Authorization: string } },
 ): Promise<POSShift> => {
   const response: AxiosResponse<POSShift> = await apiActions.post(
     `/api/v1/posshifts/open/`,
     data,
-    headers
+    headers,
   );
   return response.data;
 };
 
 export const closeShift = async (
   data: { closing_float: number },
-  headers: { headers: { Authorization: string } }
+  reference: string,
+  headers: { headers: { Authorization: string } },
 ): Promise<POSShift> => {
-  const response: AxiosResponse<POSShift> = await apiActions.post(
-    `/api/v1/posshifts/close/`,
+  const response: AxiosResponse<POSShift> = await apiActions.patch(
+    `/api/v1/posshifts/${reference}/close/`,
     data,
-    headers
+    headers,
   );
   return response.data;
 };

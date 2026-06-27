@@ -5,7 +5,10 @@ import { useFetchInventory } from "@/hooks/stockadjustments/actions";
 import { useFetchPOSSales } from "@/hooks/possales/actions";
 import { useFetchCurrentShift } from "@/hooks/posshifts/actions";
 import { useFetchAccount } from "@/hooks/accounts/actions";
-import { useFetchWalkInCustomers, useLookupCustomer } from "@/hooks/walkincustomers/actions";
+import {
+  useFetchWalkInCustomers,
+  useLookupCustomer,
+} from "@/hooks/walkincustomers/actions";
 import { voidPOSSale } from "@/services/possales";
 import { createWalkInCustomer } from "@/services/walkincustomers";
 import { useQueryClient } from "@tanstack/react-query";
@@ -114,8 +117,8 @@ const ProductTile = ({
             outOfStock
               ? "bg-red-100 text-red-600"
               : item.is_low_stock
-              ? "bg-amber-100 text-amber-600"
-              : "bg-[#F5F5F7] text-[#6E6E73]"
+                ? "bg-amber-100 text-amber-600"
+                : "bg-[#F5F5F7] text-[#6E6E73]"
           }`}
         >
           {outOfStock ? "Out of stock" : `${item.stock} left`}
@@ -145,9 +148,7 @@ const CartLine = ({
         <p className="text-sm font-semibold text-[#1D1D1F] truncate">
           {item.variant.product_name}
         </p>
-        {attrs && (
-          <p className="text-xs text-[#86868B] truncate">{attrs}</p>
-        )}
+        {attrs && <p className="text-xs text-[#86868B] truncate">{attrs}</p>}
         <p className="text-sm font-medium text-[#0071E3] mt-0.5">
           {formatKES(item.variant.price * item.quantity)}
         </p>
@@ -215,7 +216,8 @@ const RecentSaleRow = ({
         </span>
       </p>
       <p className="text-xs text-[#86868B] truncate">
-        {sale.customer_name || "Walk-in"} · {sale.items.length} item{sale.items.length !== 1 ? "s" : ""} ·{" "}
+        {sale.customer_name || "Walk-in"} · {sale.items.length} item
+        {sale.items.length !== 1 ? "s" : ""} ·{" "}
         {new Date(sale.sale_date).toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
@@ -240,12 +242,14 @@ export default function POSPage() {
   const { data: user } = useFetchAccount();
   const currency = user?.shop?.currency || "KES";
 
-  const { data: currentShift, isLoading: shiftLoading } = useFetchCurrentShift();
-  const { data: inventory = [], isLoading: inventoryLoading } = useFetchInventory();
+  const { data: currentShift, isLoading: shiftLoading } =
+    useFetchCurrentShift();
+  const { data: inventory = [], isLoading: inventoryLoading } =
+    useFetchInventory();
   const { data: recentSales = [] } = useFetchPOSSales();
   const queryClient = useQueryClient();
   const header = useAxiosAuth();
-  
+
   const [isVoiding, setIsVoiding] = useState<string | null>(null);
   const [isEnrolling, setIsEnrolling] = useState(false);
 
@@ -264,7 +268,10 @@ export default function POSPage() {
   const handleEnrollCustomer = async () => {
     setIsEnrolling(true);
     try {
-      const newCustomer = await createWalkInCustomer({ phone: customerPhone, name: customerName }, header);
+      const newCustomer = await createWalkInCustomer(
+        { phone: customerPhone, name: customerName },
+        header,
+      );
       queryClient.invalidateQueries({ queryKey: ["walkincustomers"] });
       handleSelectCustomer(newCustomer);
       toast.success("Customer enrolled successfully!");
@@ -291,7 +298,8 @@ export default function POSPage() {
     return () => clearTimeout(handler);
   }, [customerSearch]);
 
-  const { data: searchedCustomers = [], isLoading: customerSearchLoading } = useFetchWalkInCustomers(debouncedCustomerSearch);
+  const { data: searchedCustomers = [], isLoading: customerSearchLoading } =
+    useFetchWalkInCustomers(debouncedCustomerSearch);
 
   const handleSelectCustomer = (customer: any) => {
     setSelectedCustomer(customer);
@@ -353,7 +361,8 @@ export default function POSPage() {
 
   // Cart calculations
   const cartTotal = useMemo(
-    () => cart.reduce((sum, item) => sum + item.variant.price * item.quantity, 0),
+    () =>
+      cart.reduce((sum, item) => sum + item.variant.price * item.quantity, 0),
     [cart],
   );
   const cartCount = useMemo(
@@ -364,7 +373,9 @@ export default function POSPage() {
   // Cart handlers
   const addToCart = (item: InventoryItem) => {
     setCart((prev) => {
-      const existing = prev.find((c) => c.variant.variant_id === item.variant_id);
+      const existing = prev.find(
+        (c) => c.variant.variant_id === item.variant_id,
+      );
       if (existing) {
         if (existing.quantity >= item.stock) return prev;
         return prev.map((c) =>
@@ -412,7 +423,7 @@ export default function POSPage() {
     setSuccessRef(ref);
     setCart([]);
     clearSelectedCustomer();
-    
+
     // Trigger refetch of critical data
     queryClient.invalidateQueries({ queryKey: ["inventory"] });
     queryClient.invalidateQueries({ queryKey: ["pos-sales"] });
@@ -420,7 +431,11 @@ export default function POSPage() {
   };
 
   if (shiftLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-[#F5F5F7]"><Loader2 className="w-8 h-8 animate-spin text-[#0071E3]" /></div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F7]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0071E3]" />
+      </div>
+    );
   }
 
   return (
@@ -429,7 +444,11 @@ export default function POSPage() {
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <SectionHeader
             title="POS Register"
-            description={currentShift ? `Till: ${currentShift.till_name || 'Unknown'} • Opened: ${new Date(currentShift.opened_at).toLocaleTimeString()}` : "Log walk-in sales and manage in-store transactions."}
+            description={
+              currentShift
+                ? `Till: ${currentShift.till_name || "Unknown"} • Opened: ${new Date(currentShift.opened_at).toLocaleTimeString()} • Expected Cash: ${currentShift.expected_cash}`
+                : "Log walk-in sales and manage in-store transactions."
+            }
           />
           <div className="flex items-center gap-3">
             <Link
@@ -480,7 +499,9 @@ export default function POSPage() {
             {!currentShift && !shiftLoading ? (
               <div className="py-20 flex flex-col items-center gap-3 bg-white rounded-2xl border border-dashed border-[#D2D2D7]">
                 <Monitor className="w-10 h-10 text-[#D2D2D7]" />
-                <p className="text-sm font-semibold text-[#1D1D1F]">Shift Closed</p>
+                <p className="text-sm font-semibold text-[#1D1D1F]">
+                  Shift Closed
+                </p>
                 <p className="text-xs text-[#86868B] text-center max-w-sm">
                   You must open a shift to view products and process sales.
                 </p>
@@ -505,7 +526,9 @@ export default function POSPage() {
             ) : filteredInventory.length === 0 ? (
               <div className="py-20 flex flex-col items-center gap-3 bg-white rounded-2xl border border-dashed border-[#D2D2D7]">
                 <ScanLine className="w-10 h-10 text-[#D2D2D7]" />
-                <p className="text-sm font-semibold text-[#1D1D1F]">No products found</p>
+                <p className="text-sm font-semibold text-[#1D1D1F]">
+                  No products found
+                </p>
                 <p className="text-xs text-[#86868B]">
                   Try a different search, or add products first.
                 </p>
@@ -513,7 +536,11 @@ export default function POSPage() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {filteredInventory.map((item) => (
-                  <ProductTile key={item.variant_id} item={item} onAdd={addToCart} />
+                  <ProductTile
+                    key={item.variant_id}
+                    item={item}
+                    onAdd={addToCart}
+                  />
                 ))}
               </div>
             )}
@@ -526,8 +553,12 @@ export default function POSPage() {
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-emerald-700">Sale Recorded!</p>
-                  <p className="text-xs text-emerald-600 mt-0.5">Ref: {successRef}</p>
+                  <p className="text-sm font-semibold text-emerald-700">
+                    Sale Recorded!
+                  </p>
+                  <p className="text-xs text-emerald-600 mt-0.5">
+                    Ref: {successRef}
+                  </p>
                 </div>
                 <button
                   onClick={clearCart}
@@ -571,7 +602,9 @@ export default function POSPage() {
                 {cart.length === 0 ? (
                   <div className="py-10 flex flex-col items-center gap-2">
                     <ShoppingCart className="w-8 h-8 text-[#D2D2D7]" />
-                    <p className="text-xs text-[#86868B]">Add products to start a sale</p>
+                    <p className="text-xs text-[#86868B]">
+                      Add products to start a sale
+                    </p>
                   </div>
                 ) : (
                   cart.map((item) => (
@@ -617,13 +650,17 @@ export default function POSPage() {
                         setIsDropdownOpen(true);
                       }}
                       onFocus={() => setIsDropdownOpen(true)}
-                      onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
+                      onBlur={() =>
+                        setTimeout(() => setIsDropdownOpen(false), 200)
+                      }
                       className="w-full px-3 py-2.5 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
                     />
                     {isDropdownOpen && customerSearch.length > 1 && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#D2D2D7] rounded-xl shadow-lg max-h-48 overflow-y-auto z-10">
                         {customerSearchLoading ? (
-                          <div className="p-3 text-center text-sm text-[#86868B]">Searching...</div>
+                          <div className="p-3 text-center text-sm text-[#86868B]">
+                            Searching...
+                          </div>
                         ) : searchedCustomers.length > 0 ? (
                           searchedCustomers.map((c: any) => (
                             <button
@@ -631,19 +668,27 @@ export default function POSPage() {
                               onClick={() => handleSelectCustomer(c)}
                               className="w-full text-left px-4 py-2.5 hover:bg-[#F5F5F7] border-b border-[#F5F5F7] last:border-b-0 transition-colors"
                             >
-                              <p className="text-sm font-semibold text-[#1D1D1F]">{c.name}</p>
-                              <p className="text-xs text-[#86868B]">{c.phone}</p>
+                              <p className="text-sm font-semibold text-[#1D1D1F]">
+                                {c.name}
+                              </p>
+                              <p className="text-xs text-[#86868B]">
+                                {c.phone}
+                              </p>
                             </button>
                           ))
                         ) : (
-                          <div className="p-3 text-center text-sm text-[#86868B]">No customer found.</div>
+                          <div className="p-3 text-center text-sm text-[#86868B]">
+                            No customer found.
+                          </div>
                         )}
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="space-y-3 mt-2 border-t border-[#F5F5F7] pt-4">
-                    <p className="text-xs font-semibold text-[#86868B] uppercase">Or Add New Customer</p>
+                    <p className="text-xs font-semibold text-[#86868B] uppercase">
+                      Or Add New Customer
+                    </p>
                     <input
                       type="text"
                       placeholder="Customer Name"
@@ -664,7 +709,9 @@ export default function POSPage() {
                         disabled={isEnrolling}
                         className="w-full py-2 bg-[#F5F5F7] text-[#0071E3] rounded-xl text-xs font-bold hover:bg-[#E8E8ED] transition-colors"
                       >
-                        {isEnrolling ? "Enrolling..." : "Enroll in Loyalty Program"}
+                        {isEnrolling
+                          ? "Enrolling..."
+                          : "Enroll in Loyalty Program"}
                       </button>
                     )}
                   </div>
@@ -672,24 +719,39 @@ export default function POSPage() {
               ) : (
                 <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-emerald-800">{selectedCustomer.name}</p>
+                    <p className="text-xs font-semibold text-emerald-800">
+                      {selectedCustomer.name}
+                    </p>
                     <p className="text-sm font-bold text-emerald-700 flex items-center gap-1">
-                      <Gift className="w-3.5 h-3.5" /> {(selectedCustomer.loyalty_points || 0).toFixed(0)} pts
+                      <Gift className="w-3.5 h-3.5" />{" "}
+                      {(selectedCustomer.loyalty_points || 0).toFixed(0)} pts
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 items-end">
-                    <button onClick={clearSelectedCustomer} className="text-xs text-emerald-800 hover:text-emerald-900 underline">
+                    <button
+                      onClick={clearSelectedCustomer}
+                      className="text-xs text-emerald-800 hover:text-emerald-900 underline"
+                    >
                       Change Customer
                     </button>
                     <div className="flex gap-2">
-                      {(selectedCustomer.loyalty_points || 0) > 0 && cartTotal > 0 && pointsToRedeem === 0 && (
-                        <button
-                          onClick={() => setPointsToRedeem(Math.min((selectedCustomer.loyalty_points || 0), cartTotal))}
-                          className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors"
-                        >
-                          Redeem
-                        </button>
-                      )}
+                      {(selectedCustomer.loyalty_points || 0) > 0 &&
+                        cartTotal > 0 &&
+                        pointsToRedeem === 0 && (
+                          <button
+                            onClick={() =>
+                              setPointsToRedeem(
+                                Math.min(
+                                  selectedCustomer.loyalty_points || 0,
+                                  cartTotal,
+                                ),
+                              )
+                            }
+                            className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors"
+                          >
+                            Redeem
+                          </button>
+                        )}
                       {pointsToRedeem > 0 && (
                         <button
                           onClick={() => setPointsToRedeem(0)}
@@ -720,7 +782,9 @@ export default function POSPage() {
             <div className="bg-white rounded-2xl border border-[#D2D2D7] overflow-hidden">
               <div className="px-5 py-4 border-b border-[#F5F5F7] flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#0071E3]" />
-                <span className="text-sm font-semibold text-[#1D1D1F]">Today's Sales</span>
+                <span className="text-sm font-semibold text-[#1D1D1F]">
+                  Today's Sales
+                </span>
               </div>
               <div className="px-5 max-h-72 overflow-y-auto">
                 {todaySales.length === 0 ? (
@@ -751,14 +815,29 @@ export default function POSPage() {
           onClose={() => setIsOpenShiftModalOpen(false)}
         />
       )}
-      {isCloseShiftModalOpen && <CloseShiftModal currency={currency} onClose={() => setIsCloseShiftModalOpen(false)} />}
-      
+      {isCloseShiftModalOpen && (
+        <CloseShiftModal
+          currency={currency}
+          onClose={() => setIsCloseShiftModalOpen(false)}
+          reference={currentShift?.reference || ""}
+          expectedCash={
+            currentShift?.expected_cash
+              ? parseFloat(currentShift.expected_cash)
+              : 0
+          }
+        />
+      )}
+
       {isCheckoutModalOpen && (
         <CheckoutModal
           cart={cart}
           cartTotal={cartTotal}
           currency={currency}
-          customerData={{ name: customerName, phone: customerPhone, pointsToRedeem }}
+          customerData={{
+            name: customerName,
+            phone: customerPhone,
+            pointsToRedeem,
+          }}
           onClose={() => setIsCheckoutModalOpen(false)}
           onSuccess={handleCheckoutSuccess}
         />
