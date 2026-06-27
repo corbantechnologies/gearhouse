@@ -45,10 +45,10 @@ export default function VendorNavbar() {
   ];
 
   const posNavLinks = [
-    { name: "POS Register", href: "/pos/register", icon: ScanLine },
-    { name: "Customers", href: "/pos/customers", icon: Users },
     { name: "POS Sales", href: "/vendor/pos-sales", icon: Receipt },
     { name: "POS Shifts", href: "/vendor/pos-shifts", icon: ClipboardList },
+    { name: "Customers", href: "/pos/customers", icon: Users },
+    { name: "POS Register", href: "/pos/register", icon: ScanLine },
     { name: "POS Settings", href: "/pos/settings", icon: Settings },
   ];
 

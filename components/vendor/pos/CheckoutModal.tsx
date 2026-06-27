@@ -10,7 +10,7 @@ import { X, CreditCard, Banknote, Smartphone, CheckCircle2, Loader2, AlertCircle
 const PAYMENT_METHODS = [
   { value: "CASH", label: "Cash", icon: Banknote },
   { value: "MPESA_MANUAL", label: "M-Pesa Manual", icon: Smartphone },
-  { value: "MPESA_STK", label: "M-Pesa STK", icon: Signal },
+  // { value: "MPESA_STK", label: "M-Pesa STK", icon: Signal },
   { value: "CARD", label: "Card", icon: CreditCard },
 ] as const;
 
