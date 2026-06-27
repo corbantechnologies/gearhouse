@@ -32,6 +32,15 @@ export const getPOSBundles = async (
   return response.data.results || [];
 };
 
+export const getPOSBundle = async (
+  id: string,
+  headers: { headers: { Authorization: string } }
+): Promise<POSBundle> => {
+  const response: AxiosResponse<POSBundle> =
+    await apiActions.get(`/api/v1/posbundles/${id}/`, headers);
+  return response.data;
+};
+
 export const createPOSBundle = async (
   data: FormData,
   headers: { headers: { Authorization: string } }

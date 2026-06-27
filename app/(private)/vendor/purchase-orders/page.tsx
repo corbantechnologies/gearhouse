@@ -1,23 +1,32 @@
 "use client";
-
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import SectionHeader from "@/components/dashboard/SectionHeader";
-import { useFetchPurchaseOrders, useUpdatePurchaseOrderStatus } from "@/hooks/purchaseorders/actions";
+import { useFetchPurchaseOrders } from "@/hooks/purchaseorders/actions";
+import { updatePurchaseOrderStatus } from "@/services/purchaseorders";
+import { useQueryClient } from "@tanstack/react-query";
+import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 import { Plus, Boxes, Calendar, PackageCheck, AlertCircle, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import CreatePOModal from "@/components/vendor/pos/purchase-orders/CreatePOModal";
 
 export default function PurchaseOrdersPage() {
   const { data: orders = [], isLoading } = useFetchPurchaseOrders();
-  const updateStatusMutation = useUpdatePurchaseOrderStatus();
+  const queryClient = useQueryClient();
+  const header = useAxiosAuth();
+  const [processingId, setProcessingId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleMarkReceived = async (reference: string) => {
     if (confirm("Mark this order as Received? This will automatically update your inventory stock levels.")) {
+      setProcessingId(reference);
       try {
-        await updateStatusMutation.mutateAsync({ reference, status: "RECEIVED" });
+        await updatePurchaseOrderStatus(reference, "RECEIVED", header);
+        queryClient.invalidateQueries({ queryKey: ["purchaseorders"] });
       } catch (error) {
         console.error(error);
-        alert("Failed to update status.");
+        toast.error("Failed to update status.");
+      } finally {
+        setProcessingId(null);
       }
     }
   };
@@ -118,10 +127,10 @@ export default function PurchaseOrdersPage() {
                   <div className="p-4 border-t border-[#F5F5F7] bg-[#FAFAFA]">
                     <button
                       onClick={() => handleMarkReceived(order.reference)}
-                      disabled={updateStatusMutation.isPending}
+                      disabled={processingId === order.reference}
                       className="w-full py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-emerald-100 transition-colors"
                     >
-                      {updateStatusMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin"/> : <PackageCheck className="w-4 h-4" />}
+                      {processingId === order.reference ? <Loader2 className="w-4 h-4 animate-spin"/> : <PackageCheck className="w-4 h-4" />}
                       Mark as Received (Restock Inventory)
                     </button>
                   </div>

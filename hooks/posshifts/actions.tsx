@@ -5,59 +5,28 @@ import { useSession } from "next-auth/react";
 import {
   getPOSShifts,
   getCurrentShift,
-  openShift,
-  closeShift,
 } from "@/services/posshifts";
+import useAxiosAuth from "../authentication/useAxiosAuth";
 
 export const useFetchPOSShifts = () => {
-  const { data: session } = useSession();
-  const token = session?.user?.token;
+  const token = useAxiosAuth();
 
   return useQuery({
     queryKey: ["posshifts"],
-    queryFn: () => getPOSShifts({ headers: { Authorization: `Bearer ${token}` } }),
+    queryFn: () => getPOSShifts(token),
     enabled: !!token,
   });
 };
 
 export const useFetchCurrentShift = () => {
-  const { data: session } = useSession();
-  const token = session?.user?.token;
+  const token = useAxiosAuth();
 
   return useQuery({
     queryKey: ["currentShift"],
-    queryFn: () => getCurrentShift({ headers: { Authorization: `Bearer ${token}` } }),
+    queryFn: () => getCurrentShift(token),
     enabled: !!token,
-    retry: false, // Don't retry if 404
+    retry: false,
   });
 };
 
-export const useOpenShift = () => {
-  const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const token = session?.user?.token;
 
-  return useMutation({
-    mutationFn: (data: { till: string; opening_float: number }) =>
-      openShift(data, { headers: { Authorization: `Bearer ${token}` } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["currentShift"] });
-      queryClient.invalidateQueries({ queryKey: ["posshifts"] });
-    },
-  });
-};
-
-export const useCloseShift = () => {
-  const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const token = session?.user?.token;
-
-  return useMutation({
-    mutationFn: (data: { closing_float: number }) =>
-      closeShift(data, { headers: { Authorization: `Bearer ${token}` } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["currentShift"] });
-      queryClient.invalidateQueries({ queryKey: ["posshifts"] });
-    },
-  });
-};

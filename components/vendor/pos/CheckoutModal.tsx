@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useCreatePOSSale, useFetchPOSSale } from "@/hooks/possales/actions";
+import { useFetchPOSSale } from "@/hooks/possales/actions";
+import { createPOSSale } from "@/services/possales";
+import { useQueryClient } from "@tanstack/react-query";
+import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 import { X, CreditCard, Banknote, Smartphone, CheckCircle2, Loader2, AlertCircle, Plus, Trash2, Signal } from "lucide-react";
 
 const PAYMENT_METHODS = [
@@ -30,7 +33,9 @@ export const CheckoutModal = ({
   onClose: () => void;
   onSuccess: (ref: string) => void;
 }) => {
-  const createSaleMutation = useCreatePOSSale();
+  const queryClient = useQueryClient();
+  const header = useAxiosAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Split payments state
   const [payments, setPayments] = useState<{ method: string; amount: number; ref?: string }[]>([]);
@@ -100,6 +105,7 @@ export const CheckoutModal = ({
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const items = cart.map((c) => ({
         variant: c.variant.variant_id,
@@ -110,7 +116,7 @@ export const CheckoutModal = ({
       // Assuming backend uses `payment_method` for primary and `mpesa_reference`
       const primaryPayment = payments.length > 0 ? payments[0] : { method: "CASH", ref: "" };
 
-      const sale = await createSaleMutation.mutateAsync({
+      const sale = await createPOSSale({
         items,
         payment_method: primaryPayment.method as any,
         mpesa_reference: primaryPayment.method === "MPESA_MANUAL" ? primaryPayment.ref : undefined,
@@ -118,8 +124,10 @@ export const CheckoutModal = ({
         customer_name: customerData.name || undefined,
         customer_phone: customerData.phone || undefined,
         discount_amount: globalDiscount,
-        loyalty_points_redeemed: customerData.pointsToRedeem,
-      });
+        loyalty_points_to_redeem: customerData.pointsToRedeem,
+      }, header);
+
+      queryClient.invalidateQueries({ queryKey: ["possales"] });
 
       if (primaryPayment.method === "MPESA_STK") {
         setStkSaleRef(sale.reference);
@@ -128,12 +136,14 @@ export const CheckoutModal = ({
       }
     } catch (err: any) {
       setErrorMsg(err?.response?.data?.detail || "Failed to process sale.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="px-6 py-5 border-b border-[#F5F5F7] flex items-center justify-between">
           <h2 className="text-xl font-bold text-[#1D1D1F]">Checkout</h2>
@@ -302,10 +312,10 @@ export const CheckoutModal = ({
           </button>
           <button
             onClick={handleCompleteSale}
-            disabled={remaining > 0 || createSaleMutation.isPending}
+            disabled={remaining > 0 || isSubmitting}
             className="flex-[2] py-3.5 bg-[#0071E3] text-white font-bold rounded-xl hover:bg-[#0077ED] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {createSaleMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
             Complete Sale
           </button>
         </div>

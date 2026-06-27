@@ -1,63 +1,27 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import {
   getPOSTills,
-  createPOSTill,
-  updatePOSTill,
-  deletePOSTill,
+  getPOSTill
 } from "@/services/postills";
+import useAxiosAuth from "../authentication/useAxiosAuth";
 
 export const useFetchPOSTills = () => {
-  const { data: session } = useSession();
-  const token = session?.user?.token;
+  const header = useAxiosAuth();
 
   return useQuery({
     queryKey: ["postills"],
-    queryFn: () => getPOSTills({ headers: { Authorization: `Bearer ${token}` } }),
-    enabled: !!token,
+    queryFn: () => getPOSTills(header),
   });
 };
 
-export const useCreatePOSTill = () => {
-  const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const token = session?.user?.token;
+export const useFetchPOSTill = (id: string) => {
+  const header = useAxiosAuth();
 
-  return useMutation({
-    mutationFn: (data: { name: string }) =>
-      createPOSTill(data, { headers: { Authorization: `Bearer ${token}` } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["postills"] });
-    },
-  });
-};
-
-export const useUpdatePOSTill = () => {
-  const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const token = session?.user?.token;
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name?: string; is_active?: boolean } }) =>
-      updatePOSTill(id, data, { headers: { Authorization: `Bearer ${token}` } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["postills"] });
-    },
-  });
-};
-
-export const useDeletePOSTill = () => {
-  const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const token = session?.user?.token;
-
-  return useMutation({
-    mutationFn: (id: string) =>
-      deletePOSTill(id, { headers: { Authorization: `Bearer ${token}` } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["postills"] });
-    },
+  return useQuery({
+    queryKey: ["postill", id],
+    queryFn: () => getPOSTill(id, header),
+    enabled: !!id,
   });
 };

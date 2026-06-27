@@ -19,6 +19,15 @@ export const getPOSTills = async (headers: {
   return response.data.results || [];
 };
 
+export const getPOSTill = async (id: string, headers: {
+  headers: { Authorization: string };
+}): Promise<POSTill> => {
+  const response: AxiosResponse<POSTill> = await apiActions.get(
+    `/api/v1/postills/${id}/`, headers
+  );
+  return response.data;
+};
+
 export const createPOSTill = async (
   data: { name: string },
   headers: { headers: { Authorization: string } }

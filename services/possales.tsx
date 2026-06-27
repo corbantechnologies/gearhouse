@@ -99,7 +99,7 @@ export interface CreatePOSSale {
   mpesa_reference?: string;
   mpesa_phone_number?: string;
   discount_amount?: number;
-  loyalty_points_redeemed?: number;
+  loyalty_points_to_redeem?: number;
   notes?: string;
 }
 
@@ -203,6 +203,20 @@ export const sendPOSSaleReceiptEmail = async (
     `/api/v1/possales/${reference}/send-receipt/`,
     { email },
     headers,
+  );
+  return response.data;
+};
+
+export const downloadPOSSaleReceiptPdf = async (
+  reference: string,
+  headers: { headers: { Authorization: string } },
+): Promise<Blob> => {
+  const response = await apiActions.get(
+    `/api/v1/possales/${reference}/download-receipt/`,
+    {
+      ...headers,
+      responseType: 'blob',
+    },
   );
   return response.data;
 };

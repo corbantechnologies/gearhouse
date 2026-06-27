@@ -1,12 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   getInventory,
   getLowStock,
   getStockAdjustments,
-  createStockAdjustment,
-  CreateStockAdjustment,
 } from "@/services/stockadjustments";
 import useAxiosAuth from "../authentication/useAxiosAuth";
 
@@ -34,16 +32,3 @@ export function useFetchStockAdjustments() {
   });
 }
 
-export function useCreateStockAdjustment() {
-  const headers = useAxiosAuth();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateStockAdjustment) =>
-      createStockAdjustment(data, headers),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["inventory"] });
-      queryClient.invalidateQueries({ queryKey: ["low-stock"] });
-      queryClient.invalidateQueries({ queryKey: ["stock-adjustments"] });
-    },
-  });
-}
