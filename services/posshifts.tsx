@@ -7,14 +7,15 @@ import { POSTill } from "./postills";
 
 export interface POSShift {
   id: string;
-  cashier_name: string;
-  till: POSTill;
-  opening_time: string;
-  closing_time: string | null;
+  reference: string;
+  opened_by_name: string;
+  till_name: string;
+  opened_at: string;
+  closed_at: string | null;
   opening_float: string;
   expected_cash: string;
   closing_float: string | null;
-  discrepancy: string | null;
+  cash_discrepancy: string | null;
   status: "OPEN" | "CLOSED";
 }
 
