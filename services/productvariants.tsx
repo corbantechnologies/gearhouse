@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
+ 
 "use client";
 
 import { apiActions, apiMultipartActions } from "@/tools/axios";
