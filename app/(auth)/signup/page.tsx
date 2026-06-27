@@ -1,4 +1,3 @@
- 
 "use client";
 
 import { useFormik } from "formik";
@@ -35,7 +34,10 @@ export default function SignupCustomer() {
     onSubmit: async (values) => {
       setLoading(true);
       try {
-        await signupCustomer({ ...values, phone_number: values.phone_number || null });
+        await signupCustomer({
+          ...values,
+          phone_number: values.phone_number || null,
+        });
         toast.success("Account created! Please sign in.");
         router.push("/login");
       } catch (error: any) {
@@ -54,16 +56,23 @@ export default function SignupCustomer() {
       <div className="hidden lg:flex lg:w-1/2 bg-[#1D1D1F] flex-col justify-between p-14">
         <Link href="/" className="flex items-center gap-2">
           <Zap className="w-6 h-6 text-[#0071E3] fill-[#0071E3]" />
-          <span className="text-xl font-bold text-white tracking-tight">GearHouse</span>
+          <span className="text-xl font-bold text-white tracking-tight">
+            GearHouse
+          </span>
         </Link>
         <div>
           <p className="text-3xl font-bold text-white leading-snug mb-4 tracking-tight">
-            "Join thousands of tech<br />enthusiasts who gear<br />
+            "Join thousands of tech
+            <br />
+            enthusiasts who gear
+            <br />
             <span className="text-[#0071E3]">smarter.</span>"
           </p>
           <p className="text-sm text-white/40">— The GearHouse Community</p>
         </div>
-        <p className="text-xs text-white/30">Powered by Corban Technologies LTD</p>
+        <p className="text-xs text-white/30">
+          Powered by Corban Technologies LTD
+        </p>
       </div>
 
       {/* Right panel */}
@@ -86,31 +95,77 @@ export default function SignupCustomer() {
             {/* Name row */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="first_name" className="block text-sm font-medium text-[#1D1D1F] mb-1.5">First Name</label>
-                <input id="first_name" name="first_name" type="text" placeholder="John"
-                  onChange={F.handleChange} onBlur={F.handleBlur} value={F.values.first_name}
-                  className={inputClass(!!F.touched.first_name, F.errors.first_name)} />
+                <label
+                  htmlFor="first_name"
+                  className="block text-sm font-medium text-[#1D1D1F] mb-1.5"
+                >
+                  First Name
+                </label>
+                <input
+                  id="first_name"
+                  name="first_name"
+                  type="text"
+                  placeholder="John"
+                  onChange={F.handleChange}
+                  onBlur={F.handleBlur}
+                  value={F.values.first_name}
+                  className={inputClass(
+                    !!F.touched.first_name,
+                    F.errors.first_name,
+                  )}
+                />
                 {F.touched.first_name && F.errors.first_name && (
-                  <p className="text-xs text-red-500 mt-1">{F.errors.first_name}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {F.errors.first_name}
+                  </p>
                 )}
               </div>
               <div>
-                <label htmlFor="last_name" className="block text-sm font-medium text-[#1D1D1F] mb-1.5">Last Name</label>
-                <input id="last_name" name="last_name" type="text" placeholder="Doe"
-                  onChange={F.handleChange} onBlur={F.handleBlur} value={F.values.last_name}
-                  className={inputClass(!!F.touched.last_name, F.errors.last_name)} />
+                <label
+                  htmlFor="last_name"
+                  className="block text-sm font-medium text-[#1D1D1F] mb-1.5"
+                >
+                  Last Name
+                </label>
+                <input
+                  id="last_name"
+                  name="last_name"
+                  type="text"
+                  placeholder="Doe"
+                  onChange={F.handleChange}
+                  onBlur={F.handleBlur}
+                  value={F.values.last_name}
+                  className={inputClass(
+                    !!F.touched.last_name,
+                    F.errors.last_name,
+                  )}
+                />
                 {F.touched.last_name && F.errors.last_name && (
-                  <p className="text-xs text-red-500 mt-1">{F.errors.last_name}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {F.errors.last_name}
+                  </p>
                 )}
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#1D1D1F] mb-1.5">Email</label>
-              <input id="email" name="email" type="email" placeholder="you@example.com"
-                onChange={F.handleChange} onBlur={F.handleBlur} value={F.values.email}
-                className={inputClass(!!F.touched.email, F.errors.email)} />
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-[#1D1D1F] mb-1.5"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                onChange={F.handleChange}
+                onBlur={F.handleBlur}
+                value={F.values.email}
+                className={inputClass(!!F.touched.email, F.errors.email)}
+              />
               {F.touched.email && F.errors.email && (
                 <p className="text-xs text-red-500 mt-1">{F.errors.email}</p>
               )}
@@ -118,23 +173,43 @@ export default function SignupCustomer() {
 
             {/* Phone */}
             <div>
-              <label htmlFor="phone_number" className="block text-sm font-medium text-[#1D1D1F] mb-1.5">
-                Phone <span className="text-[#86868B] font-normal">(optional)</span>
+              <label
+                htmlFor="phone_number"
+                className="block text-sm font-medium text-[#1D1D1F] mb-1.5"
+              >
+                Phone{" "}
+                <span className="text-[#86868B] font-normal">(optional)</span>
               </label>
-              <input id="phone_number" name="phone_number" type="text" placeholder="+254 700 000 000"
-                onChange={F.handleChange} onBlur={F.handleBlur} value={F.values.phone_number}
-                className={inputClass(!!F.touched.phone_number, F.errors.phone_number)} />
-              {F.touched.phone_number && F.errors.phone_number && (
-                <p className="text-xs text-red-500 mt-1">{F.errors.phone_number}</p>
-              )}
+              <input
+                id="phone_number"
+                name="phone_number"
+                type="text"
+                placeholder="+254 700 000 000"
+                onChange={F.handleChange}
+                onBlur={F.handleBlur}
+                value={F.values.phone_number}
+                className={inputClass(!!F.touched.phone_number)}
+              />
             </div>
 
             {/* Country */}
             <div>
-              <label htmlFor="country" className="block text-sm font-medium text-[#1D1D1F] mb-1.5">Country</label>
-              <input id="country" name="country" type="text" placeholder="Kenya"
-                onChange={F.handleChange} onBlur={F.handleBlur} value={F.values.country}
-                className={inputClass(!!F.touched.country, F.errors.country)} />
+              <label
+                htmlFor="country"
+                className="block text-sm font-medium text-[#1D1D1F] mb-1.5"
+              >
+                Country
+              </label>
+              <input
+                id="country"
+                name="country"
+                type="text"
+                placeholder="Kenya"
+                onChange={F.handleChange}
+                onBlur={F.handleBlur}
+                value={F.values.country}
+                className={inputClass(!!F.touched.country, F.errors.country)}
+              />
               {F.touched.country && F.errors.country && (
                 <p className="text-xs text-red-500 mt-1">{F.errors.country}</p>
               )}
@@ -142,14 +217,33 @@ export default function SignupCustomer() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#1D1D1F] mb-1.5">Password</label>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-[#1D1D1F] mb-1.5"
+              >
+                Password
+              </label>
               <div className="relative">
-                <input id="password" name="password" type={showPassword ? "text" : "password"} placeholder="Create a strong password"
-                  onChange={F.handleChange} onBlur={F.handleBlur} value={F.values.password}
-                  className={`${inputClass(!!F.touched.password, F.errors.password)} pr-11`} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#86868B] hover:text-[#1D1D1F]">
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a strong password"
+                  onChange={F.handleChange}
+                  onBlur={F.handleBlur}
+                  value={F.values.password}
+                  className={`${inputClass(!!F.touched.password, F.errors.password)} pr-11`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#86868B] hover:text-[#1D1D1F]"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
               {F.touched.password && F.errors.password && (
@@ -159,32 +253,67 @@ export default function SignupCustomer() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="password_confirmation" className="block text-sm font-medium text-[#1D1D1F] mb-1.5">Confirm Password</label>
+              <label
+                htmlFor="password_confirmation"
+                className="block text-sm font-medium text-[#1D1D1F] mb-1.5"
+              >
+                Confirm Password
+              </label>
               <div className="relative">
-                <input id="password_confirmation" name="password_confirmation" type={showConfirm ? "text" : "password"} placeholder="Repeat your password"
-                  onChange={F.handleChange} onBlur={F.handleBlur} value={F.values.password_confirmation}
-                  className={`${inputClass(!!F.touched.password_confirmation, F.errors.password_confirmation)} pr-11`} />
-                <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#86868B] hover:text-[#1D1D1F]">
-                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <input
+                  id="password_confirmation"
+                  name="password_confirmation"
+                  type={showConfirm ? "text" : "password"}
+                  placeholder="Repeat your password"
+                  onChange={F.handleChange}
+                  onBlur={F.handleBlur}
+                  value={F.values.password_confirmation}
+                  className={`${inputClass(!!F.touched.password_confirmation, F.errors.password_confirmation)} pr-11`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#86868B] hover:text-[#1D1D1F]"
+                >
+                  {showConfirm ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
-              {F.touched.password_confirmation && F.errors.password_confirmation && (
-                <p className="text-xs text-red-500 mt-1">{F.errors.password_confirmation}</p>
-              )}
+              {F.touched.password_confirmation &&
+                F.errors.password_confirmation && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {F.errors.password_confirmation}
+                  </p>
+                )}
             </div>
 
-            <button type="submit" disabled={loading}
-              className="w-full py-3.5 bg-[#0071E3] text-white rounded-full text-sm font-semibold hover:bg-[#0077ED] active:bg-[#005BB5] transition-all shadow-lg shadow-[#0071E3]/25 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 bg-[#0071E3] text-white rounded-full text-sm font-semibold hover:bg-[#0077ED] active:bg-[#005BB5] transition-all shadow-lg shadow-[#0071E3]/25 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+            >
               {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" />Creating account...</>
-              ) : "Create Account"}
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                "Create Account"
+              )}
             </button>
           </form>
 
           <p className="text-center text-sm text-[#6E6E73] mt-6">
             Already have an account?{" "}
-            <Link href="/login" className="text-[#0071E3] font-semibold hover:underline">Sign in</Link>
+            <Link
+              href="/login"
+              className="text-[#0071E3] font-semibold hover:underline"
+            >
+              Sign in
+            </Link>
           </p>
         </div>
       </div>
