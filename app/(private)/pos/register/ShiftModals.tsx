@@ -1,6 +1,6 @@
 "use client";
-
 import React from "react";
+import toast from "react-hot-toast";
 import { useFetchPOSTills } from "@/hooks/postills/actions";
 import { Loader2, Monitor, DollarSign, AlertCircle } from "lucide-react";
 import { useFormik } from "formik";
@@ -39,7 +39,7 @@ export const OpenShiftModal = ({
         queryClient.invalidateQueries({ queryKey: ["currentShift"] });
         queryClient.invalidateQueries({ queryKey: ["posshifts"] });
       } catch (err: any) {
-        alert(err?.response?.data?.detail || "Failed to open shift.");
+        toast.error(err?.response?.data?.detail || "Failed to open shift.");
       } finally {
         setSubmitting(false);
       }
@@ -151,7 +151,7 @@ export const CloseShiftModal = ({
         queryClient.invalidateQueries({ queryKey: ["posshifts"] });
         onClose();
       } catch (err: any) {
-        alert(err?.response?.data?.detail || "Failed to close shift.");
+        toast.error(err?.response?.data?.detail || "Failed to close shift.");
       } finally {
         setSubmitting(false);
       }

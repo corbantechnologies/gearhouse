@@ -1,6 +1,6 @@
 "use client";
-
 import React, { useState, useMemo } from "react";
+import toast from "react-hot-toast";
 import { useFetchInventory } from "@/hooks/stockadjustments/actions";
 import { X, Search, Plus, Minus, Loader2, Package } from "lucide-react";
 import { useFormik } from "formik";
@@ -72,7 +72,7 @@ export default function CreatePOModal({ onClose }: { onClose: () => void }) {
       supplierName: Yup.string().required("Supplier Name is required"),
     }),
     onSubmit: async (values, { setSubmitting }) => {
-      if (selectedItems.length === 0) return alert("Please add at least one item.");
+      if (selectedItems.length === 0) return toast.error("Please add at least one item.");
 
       try {
         await createPurchaseOrder({
@@ -89,7 +89,7 @@ export default function CreatePOModal({ onClose }: { onClose: () => void }) {
         onClose();
       } catch (error) {
         console.error(error);
-        alert("Failed to create Purchase Order.");
+        toast.error("Failed to create Purchase Order.");
       } finally {
         setSubmitting(false);
       }

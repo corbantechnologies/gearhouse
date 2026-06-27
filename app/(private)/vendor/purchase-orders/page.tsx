@@ -1,6 +1,6 @@
 "use client";
-
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import SectionHeader from "@/components/dashboard/SectionHeader";
 import { useFetchPurchaseOrders } from "@/hooks/purchaseorders/actions";
 import { updatePurchaseOrderStatus } from "@/services/purchaseorders";
@@ -24,7 +24,7 @@ export default function PurchaseOrdersPage() {
         queryClient.invalidateQueries({ queryKey: ["purchaseorders"] });
       } catch (error) {
         console.error(error);
-        alert("Failed to update status.");
+        toast.error("Failed to update status.");
       } finally {
         setProcessingId(null);
       }

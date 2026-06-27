@@ -1,6 +1,6 @@
 "use client";
-
 import React, { useState, useMemo, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useFetchInventory } from "@/hooks/stockadjustments/actions";
 import { useFetchPOSSales } from "@/hooks/possales/actions";
 import { useFetchCurrentShift } from "@/hooks/posshifts/actions";
@@ -254,7 +254,7 @@ export default function POSPage() {
       await voidPOSSale(ref, header);
       queryClient.invalidateQueries({ queryKey: ["possales"] });
     } catch (err: any) {
-      alert("Failed to void sale.");
+      toast.error("Failed to void sale.");
     } finally {
       setIsVoiding(null);
     }
@@ -267,7 +267,7 @@ export default function POSPage() {
       queryClient.invalidateQueries({ queryKey: ["walkincustomer", debouncedPhone] });
       queryClient.invalidateQueries({ queryKey: ["walkincustomers"] });
     } catch (err: any) {
-      alert("Failed to enroll customer.");
+      toast.error("Failed to enroll customer.");
     } finally {
       setIsEnrolling(false);
     }
