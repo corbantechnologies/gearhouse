@@ -404,7 +404,7 @@ export default function POSPage() {
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <SectionHeader
             title="POS Register"
-            description={currentShift ? `Till: ${currentShift.till.name} • Opened: ${new Date(currentShift.opening_time).toLocaleTimeString()}` : "Log walk-in sales and manage in-store transactions."}
+            description={currentShift ? `Till: ${currentShift.till?.name || 'Unknown'} • Opened: ${new Date(currentShift.opening_time).toLocaleTimeString()}` : "Log walk-in sales and manage in-store transactions."}
           />
           <div className="flex items-center gap-3">
             <Link
