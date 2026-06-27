@@ -263,7 +263,7 @@ export default function POSPage() {
   const handleEnrollCustomer = async () => {
     setIsEnrolling(true);
     try {
-      await createWalkInCustomer({ phone_number: debouncedPhone, first_name: customerName }, header);
+      await createWalkInCustomer({ phone: debouncedPhone, name: customerName }, header);
       queryClient.invalidateQueries({ queryKey: ["walkincustomer", debouncedPhone] });
       queryClient.invalidateQueries({ queryKey: ["walkincustomers"] });
     } catch (err: any) {
@@ -294,7 +294,7 @@ export default function POSPage() {
 
   useEffect(() => {
     if (foundCustomer) {
-      setCustomerName(`${foundCustomer.first_name} ${foundCustomer.last_name || ""}`.trim());
+      setCustomerName(foundCustomer.name);
     }
   }, [foundCustomer]);
 

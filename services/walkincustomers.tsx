@@ -6,9 +6,8 @@ import { PaginatedResponse } from "./general";
 
 export interface WalkInCustomer {
   id: string;
-  phone_number: string;
-  first_name: string;
-  last_name: string;
+  phone: string;
+  name: string;
   email: string | null;
   loyalty_points: number;
   total_spent: string;
@@ -42,7 +41,7 @@ export const lookupWalkInCustomer = async (
 ): Promise<WalkInCustomer | null> => {
   try {
     const response: AxiosResponse<WalkInCustomer> = await apiActions.get(
-      `/api/v1/walkincustomers/lookup/?phone_number=${encodeURIComponent(phone)}`,
+      `/api/v1/walkincustomers/lookup/?phone=${encodeURIComponent(phone)}`,
       headers
     );
     return response.data;
@@ -54,9 +53,8 @@ export const lookupWalkInCustomer = async (
 
 export const createWalkInCustomer = async (
   data: {
-    phone_number: string;
-    first_name: string;
-    last_name?: string;
+    phone: string;
+    name: string;
     email?: string;
   },
   headers: { headers: { Authorization: string } }

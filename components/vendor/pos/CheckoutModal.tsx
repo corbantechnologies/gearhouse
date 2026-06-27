@@ -124,7 +124,7 @@ export const CheckoutModal = ({
         customer_name: customerData.name || undefined,
         customer_phone: customerData.phone || undefined,
         discount_amount: globalDiscount,
-        loyalty_points_redeemed: customerData.pointsToRedeem,
+        loyalty_points_to_redeem: customerData.pointsToRedeem,
       }, header);
 
       queryClient.invalidateQueries({ queryKey: ["possales"] });

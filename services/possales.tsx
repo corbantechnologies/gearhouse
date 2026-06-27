@@ -99,7 +99,7 @@ export interface CreatePOSSale {
   mpesa_reference?: string;
   mpesa_phone_number?: string;
   discount_amount?: number;
-  loyalty_points_redeemed?: number;
+  loyalty_points_to_redeem?: number;
   notes?: string;
 }
 

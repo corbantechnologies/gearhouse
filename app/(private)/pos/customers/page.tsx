@@ -75,10 +75,10 @@ export default function CustomersPage() {
                   customers.map((customer: WalkInCustomer) => (
                     <tr key={customer.id} className="hover:bg-[#F5F5F7]/50 transition-colors">
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-[#1D1D1F]">{customer.first_name} {customer.last_name || ""}</p>
+                        <p className="font-semibold text-[#1D1D1F]">{customer.name}</p>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="font-mono text-[#6E6E73]">{customer.phone_number}</p>
+                        <p className="font-mono text-[#6E6E73]">{customer.phone}</p>
                         {customer.email && <p className="text-xs text-[#86868B] mt-0.5">{customer.email}</p>}
                       </td>
                       <td className="px-5 py-4 text-right">
