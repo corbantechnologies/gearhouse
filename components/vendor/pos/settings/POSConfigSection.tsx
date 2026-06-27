@@ -1,53 +1,48 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useFetchAccount } from "@/hooks/accounts/actions";
 import { useUpdateShop } from "@/hooks/shops/actions";
 import { Settings, Percent, Gift } from "lucide-react";
 import toast from "react-hot-toast";
 import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 import { updateShop } from "@/services/shops";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 
 export default function POSConfigSection() {
   const { data: vendor, isLoading: isAccountLoading } = useFetchAccount();
-  const axios = useAxiosAuth()
-  const [loading, setLoading] = useState(false)
+  const axios = useAxiosAuth();
 
-  const [formData, setFormData] = useState({
-    tax_rate: "0.00",
-    loyalty_points_per_unit: 0,
+  const formik = useFormik({
+    initialValues: {
+      tax_rate: vendor?.shop?.tax_rate || "0.00",
+      loyalty_points_per_unit: vendor?.shop?.loyalty_points_per_unit || 0,
+    },
+    enableReinitialize: true,
+    validationSchema: Yup.object({
+      tax_rate: Yup.number().min(0, "Must be greater than or equal to 0").required("Required"),
+      loyalty_points_per_unit: Yup.number().min(0, "Must be greater than or equal to 0").required("Required"),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
+      if (!vendor?.shop?.shop_code) return;
+
+      const toastId = toast.loading("Saving configuration...");
+      try {
+        const data = new FormData();
+        data.append("tax_rate", values.tax_rate.toString());
+        data.append("loyalty_points_per_unit", values.loyalty_points_per_unit.toString());
+
+        await updateShop(vendor.shop.shop_code, data, axios);
+        toast.success("POS Configuration updated successfully!", { id: toastId });
+      } catch (error: any) {
+        console.error(error);
+        toast.error("Failed to update POS configuration", { id: toastId });
+      } finally {
+        setSubmitting(false);
+      }
+    },
   });
-
-  useEffect(() => {
-    if (vendor?.shop) {
-      setFormData({
-        tax_rate: vendor.shop.tax_rate || "0.00",
-        loyalty_points_per_unit: vendor.shop.loyalty_points_per_unit || 0,
-      });
-    }
-  }, [vendor]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!vendor?.shop?.shop_code) return;
-
-    const toastId = toast.loading("Saving configuration...");
-    try {
-      setLoading(true)
-      const data = new FormData();
-      data.append("tax_rate", formData.tax_rate);
-      data.append("loyalty_points_per_unit", formData.loyalty_points_per_unit.toString());
-
-      await updateShop(vendor.shop.shop_code, data, axios)
-      toast.success("POS Configuration updated successfully!", { id: toastId });
-    } catch (error: any) {
-      console.error(error);
-      const errDetail = error?.response?.data?.detail || Object.values(error?.response?.data || {})[0] || "Failed to update POS configuration";
-      toast.error(typeof errDetail === "string" ? errDetail : String(errDetail), { id: toastId });
-    } finally {
-      setLoading(false)
-    }
-  };
 
   if (isAccountLoading) {
     return (
@@ -66,7 +61,7 @@ export default function POSConfigSection() {
       </div>
 
       <div className="p-4 md:p-8">
-        <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
+        <form onSubmit={formik.handleSubmit} className="space-y-6 max-w-xl">
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -78,14 +73,18 @@ export default function POSConfigSection() {
                 type="number"
                 step="0.01"
                 min="0"
-                required
-                value={formData.tax_rate}
-                onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
-                className="w-full h-11 px-4 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
+                {...formik.getFieldProps("tax_rate")}
+                className={`w-full h-11 px-4 bg-[#F5F5F7] border rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
+                  formik.touched.tax_rate && formik.errors.tax_rate ? "border-red-500" : "border-transparent"
+                }`}
               />
-              <p className="text-[10px] text-[#86868B] mt-1.5 leading-relaxed">
-                Applied to all POS sales. Set to 0 if tax is included in product prices.
-              </p>
+              {formik.touched.tax_rate && formik.errors.tax_rate ? (
+                <p className="text-[10px] text-red-500 mt-1.5 leading-relaxed">{formik.errors.tax_rate as string}</p>
+              ) : (
+                <p className="text-[10px] text-[#86868B] mt-1.5 leading-relaxed">
+                  Applied to all POS sales. Set to 0 if tax is included in product prices.
+                </p>
+              )}
             </div>
 
             <div>
@@ -97,14 +96,18 @@ export default function POSConfigSection() {
                 type="number"
                 min="0"
                 step="0.1"
-                required
-                value={formData.loyalty_points_per_unit}
-                onChange={(e) => setFormData({ ...formData, loyalty_points_per_unit: parseFloat(e.target.value) })}
-                className="w-full h-11 px-4 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
+                {...formik.getFieldProps("loyalty_points_per_unit")}
+                className={`w-full h-11 px-4 bg-[#F5F5F7] border rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
+                  formik.touched.loyalty_points_per_unit && formik.errors.loyalty_points_per_unit ? "border-red-500" : "border-transparent"
+                }`}
               />
-              <p className="text-[10px] text-[#86868B] mt-1.5 leading-relaxed">
-                Number of points awarded per 1 {vendor?.shop?.currency} spent. Example: 0.1 means 10 points per 100 spent.
-              </p>
+              {formik.touched.loyalty_points_per_unit && formik.errors.loyalty_points_per_unit ? (
+                <p className="text-[10px] text-red-500 mt-1.5 leading-relaxed">{formik.errors.loyalty_points_per_unit as string}</p>
+              ) : (
+                <p className="text-[10px] text-[#86868B] mt-1.5 leading-relaxed">
+                  Number of points awarded per 1 {vendor?.shop?.currency} spent. Example: 0.1 means 10 points per 100 spent.
+                </p>
+              )}
             </div>
           </div>
 
@@ -124,10 +127,10 @@ export default function POSConfigSection() {
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={formik.isSubmitting}
               className="h-11 px-6 bg-[#0071E3] text-white font-semibold rounded-xl text-sm hover:bg-[#0077ED] transition-colors disabled:opacity-50"
             >
-              {loading ? "Saving..." : "Save Configuration"}
+              {formik.isSubmitting ? "Saving..." : "Save Configuration"}
             </button>
           </div>
         </form>
