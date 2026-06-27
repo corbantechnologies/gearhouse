@@ -8,12 +8,10 @@ import VendorModal from "@/components/vendor/Modal";
 import toast from "react-hot-toast";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useQueryClient } from "@tanstack/react-query";
 import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 
 export default function POSStaffSection() {
-  const { data: staffList = [], isLoading } = useFetchPOSStaffList();
-  const queryClient = useQueryClient();
+  const { data: staffList = [], isLoading, refetch } = useFetchPOSStaffList();
   const header = useAxiosAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,6 +25,7 @@ export default function POSStaffSection() {
       phone_number: "",
       is_active: true,
     },
+    enableReinitialize: true,
     validationSchema: Yup.object({
       email: editingId 
         ? Yup.string() 
@@ -54,10 +53,7 @@ export default function POSStaffSection() {
           }, header);
           toast.success("Staff account created successfully", { id: tId });
         }
-        queryClient.invalidateQueries({ queryKey: ["posStaffList"] });
-        if (editingId) {
-          queryClient.invalidateQueries({ queryKey: ["posStaff", editingId] });
-        }
+        await refetch();
         setIsModalOpen(false);
       } catch (error: any) {
         console.log(error?.response?.data);
@@ -99,7 +95,7 @@ export default function POSStaffSection() {
       try {
         await deactivatePOSStaff(usercode, header);
         toast.success("Staff deactivated successfully", { id: tId });
-        queryClient.invalidateQueries({ queryKey: ["posStaffList"] });
+        await refetch();
       } catch (error: any) {
         toast.error(error?.response?.data?.detail || "Failed to deactivate", { id: tId });
       }

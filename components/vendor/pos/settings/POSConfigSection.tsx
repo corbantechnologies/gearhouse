@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useFetchAccount } from "@/hooks/accounts/actions";
-import { useUpdateShop } from "@/hooks/shops/actions";
 import { Settings, Percent, Gift } from "lucide-react";
 import toast from "react-hot-toast";
 import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
