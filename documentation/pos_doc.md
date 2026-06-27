@@ -70,3 +70,24 @@ To understand how the data ties together, here is the hierarchy:
 
 ### Why this architecture?
 If a Vendor notices that "Till 2" is constantly short of cash by KES 500 at the end of the week, they can look at the `POSShifts` for Till 2. They will see exactly which `POSStaff` member was running Till 2 during the shifts where the shortages occurred. This provides complete auditability and financial security for the shop owner.
+
+---
+
+## 4. Vendor Tracking & Logs
+
+The POS system natively records every action into auditable logs accessible via the **Vendor Dashboard**.
+
+### POS Sales History
+- **Path:** `/vendor/pos-sales`
+- Provides a comprehensive log of every physical transaction made at the tills.
+- **Details Page (`/vendor/pos-sales/[reference]`):** Vendors can click into any sale to view the complete receipt breakdown (line items, tax, discounts, split payments).
+- **Voiding:** If a sale is marked as `VOIDED`, a database signal (`pre_save` hook on `POSSale`) automatically triggers an atomic transaction that:
+  1. Restores the exact stock quantities of all items back into inventory.
+  2. Reverses any loyalty points the customer earned from that sale.
+  3. Refunds any loyalty points the customer spent on that sale.
+
+### POS Shift Logs
+- **Path:** `/vendor/pos-shifts`
+- Provides a financial audit trail of till activity and cash handling.
+- Displays opening floats, expected cash, and declared closing floats.
+- **Discrepancy Calculation:** The system calculates `cash_discrepancy` = `closing_float - expected_cash`. The dashboard highlights shortages in Red and overages in Amber, instantly alerting the vendor to cash mismanagement.

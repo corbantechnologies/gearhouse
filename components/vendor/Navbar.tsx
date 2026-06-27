@@ -18,6 +18,8 @@ import {
   ScanLine,
   Boxes,
   Users,
+  Receipt,
+  ClipboardList,
 } from "lucide-react";
 
 export default function VendorNavbar() {
@@ -33,6 +35,8 @@ export default function VendorNavbar() {
     { name: "Purchase Orders", href: "/vendor/purchase-orders", icon: Boxes },
     { name: "POS Settings", href: "/pos/settings", icon: Settings },
     { name: "POS Register", href: "/pos/register", icon: ScanLine },
+    { name: "POS Sales", href: "/vendor/pos-sales", icon: Receipt },
+    { name: "POS Shifts", href: "/vendor/pos-shifts", icon: ClipboardList },
     { name: "Customers", href: "/pos/customers", icon: Users },
     { name: "Inventory", href: "/vendor/inventory", icon: Boxes },
     { name: "Analytics", href: "/vendor/analytics", icon: BarChart3 },
