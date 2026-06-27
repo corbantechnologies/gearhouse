@@ -4,6 +4,7 @@ import "./globals.css";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import TanstackQueryProvider from "@/providers/TanstackQueryProvider";
 import { Toaster } from "react-hot-toast";
+import {Analytics} from "@vercel/analytics/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -91,6 +92,7 @@ export default function RootLayout({
         <NextAuthProvider>
           <TanstackQueryProvider>{children}</TanstackQueryProvider>
         </NextAuthProvider>
+        <Analytics />
       </body>
     </html>
   );
