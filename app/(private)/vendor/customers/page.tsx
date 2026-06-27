@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useFetchWalkInCustomers, WalkInCustomer } from "@/hooks/walkincustomers/actions";
+import { useFetchWalkInCustomers } from "@/hooks/walkincustomers/actions";
+import { WalkInCustomer } from "@/services/walkincustomers";
 import { useFetchAccount } from "@/hooks/accounts/actions";
 import SectionHeader from "@/components/dashboard/SectionHeader";
 import { Search, Users, Gift, TrendingUp, Calendar } from "lucide-react";
