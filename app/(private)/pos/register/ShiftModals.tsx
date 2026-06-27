@@ -80,7 +80,9 @@ export const OpenShiftModal = ({
                   >
                     <option value="" disabled>Select a till...</option>
                     {activeTills.map((till: any) => (
-                      <option key={till.id} value={till.id}>{till.name}</option>
+                      <option key={till.id} value={till.id} disabled={till.is_in_use}>
+                        {till.name} {till.is_in_use ? `(In Use by ${till.in_use_by || 'another cashier'})` : ''}
+                      </option>
                     ))}
                   </select>
                   {formik.touched.tillId && formik.errors.tillId && (
