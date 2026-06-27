@@ -1,9 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useFetchPOSTills } from "@/hooks/postills/actions";
-import { useOpenShift, useCloseShift } from "@/hooks/posshifts/actions";
 import { Loader2, Monitor, DollarSign, AlertCircle } from "lucide-react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { useQueryClient } from "@tanstack/react-query";
+import { openShift, closeShift } from "@/services/posshifts";
+import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
+import { useSession } from "next-auth/react";
 
 export const OpenShiftModal = ({
   currency,
@@ -11,25 +16,35 @@ export const OpenShiftModal = ({
   currency: string;
 }) => {
   const { data: tills = [], isLoading: isTillsLoading } = useFetchPOSTills();
-  const openShiftMutation = useOpenShift();
-  const [tillId, setTillId] = useState("");
-  const [floatAmount, setFloatAmount] = useState(0);
+  const queryClient = useQueryClient();
+  const axios = useAxiosAuth();
 
-  const activeTills = tills.filter((t) => t.is_active);
+  const activeTills = tills.filter((t: any) => t.is_active);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tillId) return alert("Please select a Till.");
-    
-    try {
-      await openShiftMutation.mutateAsync({
-        till: tillId,
-        opening_float: floatAmount,
-      });
-    } catch (err: any) {
-      alert(err?.response?.data?.detail || "Failed to open shift.");
-    }
-  };
+  const formik = useFormik({
+    initialValues: {
+      tillId: "",
+      floatAmount: 0,
+    },
+    validationSchema: Yup.object({
+      tillId: Yup.string().required("Please select a till"),
+      floatAmount: Yup.number().min(0, "Must be >= 0").required("Required"),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
+      try {
+        await openShift({
+          till: values.tillId,
+          opening_float: values.floatAmount,
+        }, axios);
+        queryClient.invalidateQueries({ queryKey: ["currentShift"] });
+        queryClient.invalidateQueries({ queryKey: ["posshifts"] });
+      } catch (err: any) {
+        alert(err?.response?.data?.detail || "Failed to open shift.");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -43,7 +58,7 @@ export const OpenShiftModal = ({
             You must open a shift before you can process any sales. Select your till and declare your starting cash float.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={formik.handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-2">
                 Select Till
@@ -56,17 +71,22 @@ export const OpenShiftModal = ({
                   <p>No active tills found. Please ask an administrator to create one in POS Settings.</p>
                 </div>
               ) : (
-                <select
-                  required
-                  value={tillId}
-                  onChange={(e) => setTillId(e.target.value)}
-                  className="w-full px-4 h-12 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
-                >
-                  <option value="" disabled>Select a till...</option>
-                  {activeTills.map((till) => (
-                    <option key={till.id} value={till.id}>{till.name}</option>
-                  ))}
-                </select>
+                <>
+                  <select
+                    {...formik.getFieldProps("tillId")}
+                    className={`w-full px-4 h-12 bg-[#F5F5F7] border rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
+                      formik.touched.tillId && formik.errors.tillId ? "border-red-500" : "border-transparent"
+                    }`}
+                  >
+                    <option value="" disabled>Select a till...</option>
+                    {activeTills.map((till: any) => (
+                      <option key={till.id} value={till.id}>{till.name}</option>
+                    ))}
+                  </select>
+                  {formik.touched.tillId && formik.errors.tillId && (
+                    <p className="text-xs text-red-500 mt-1.5">{formik.errors.tillId as string}</p>
+                  )}
+                </>
               )}
             </div>
 
@@ -78,22 +98,25 @@ export const OpenShiftModal = ({
                 <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
                 <input
                   type="number"
-                  required
                   min="0"
                   step="0.01"
-                  value={floatAmount}
-                  onChange={(e) => setFloatAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full pl-10 pr-4 h-12 bg-[#F5F5F7] border border-transparent rounded-xl text-sm font-semibold focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
+                  {...formik.getFieldProps("floatAmount")}
+                  className={`w-full pl-10 pr-4 h-12 bg-[#F5F5F7] border rounded-xl text-sm font-semibold focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
+                    formik.touched.floatAmount && formik.errors.floatAmount ? "border-red-500" : "border-transparent"
+                  }`}
                 />
               </div>
+              {formik.touched.floatAmount && formik.errors.floatAmount && (
+                <p className="text-xs text-red-500 mt-1.5">{formik.errors.floatAmount as string}</p>
+              )}
             </div>
 
             <button
               type="submit"
-              disabled={openShiftMutation.isPending || activeTills.length === 0}
+              disabled={formik.isSubmitting || activeTills.length === 0}
               className="w-full h-12 mt-4 bg-[#0071E3] text-white rounded-xl text-sm font-bold hover:bg-[#0077ED] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {openShiftMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {formik.isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               Start Shift
             </button>
           </form>
@@ -110,20 +133,30 @@ export const CloseShiftModal = ({
   currency: string;
   onClose: () => void;
 }) => {
-  const closeShiftMutation = useCloseShift();
-  const [floatAmount, setFloatAmount] = useState(0);
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const token = session?.user?.token;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await closeShiftMutation.mutateAsync({
-        closing_float: floatAmount,
-      });
-      onClose();
-    } catch (err: any) {
-      alert(err?.response?.data?.detail || "Failed to close shift.");
-    }
-  };
+  const formik = useFormik({
+    initialValues: {
+      floatAmount: 0,
+    },
+    validationSchema: Yup.object({
+      floatAmount: Yup.number().min(0, "Must be >= 0").required("Required"),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
+      try {
+        await closeShift({ closing_float: values.floatAmount }, { headers: { Authorization: `Bearer ${token}` } });
+        queryClient.invalidateQueries({ queryKey: ["currentShift"] });
+        queryClient.invalidateQueries({ queryKey: ["posshifts"] });
+        onClose();
+      } catch (err: any) {
+        alert(err?.response?.data?.detail || "Failed to close shift.");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -134,7 +167,7 @@ export const CloseShiftModal = ({
             Enter the final cash amount in your till before closing the shift. This will be recorded to calculate discrepancies.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={formik.handleSubmit} className="space-y-6">
             <div>
               <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-2">
                 Closing Cash Float ({currency})
@@ -143,14 +176,17 @@ export const CloseShiftModal = ({
                 <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
                 <input
                   type="number"
-                  required
                   min="0"
                   step="0.01"
-                  value={floatAmount}
-                  onChange={(e) => setFloatAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full pl-10 pr-4 h-12 bg-[#F5F5F7] border border-transparent rounded-xl text-lg font-bold focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
+                  {...formik.getFieldProps("floatAmount")}
+                  className={`w-full pl-10 pr-4 h-12 bg-[#F5F5F7] border rounded-xl text-lg font-bold focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
+                    formik.touched.floatAmount && formik.errors.floatAmount ? "border-red-500" : "border-transparent"
+                  }`}
                 />
               </div>
+              {formik.touched.floatAmount && formik.errors.floatAmount && (
+                <p className="text-xs text-red-500 mt-1.5">{formik.errors.floatAmount as string}</p>
+              )}
             </div>
 
             <div className="flex gap-3">
@@ -163,10 +199,10 @@ export const CloseShiftModal = ({
               </button>
               <button
                 type="submit"
-                disabled={closeShiftMutation.isPending}
+                disabled={formik.isSubmitting}
                 className="flex-1 h-12 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {closeShiftMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                {formik.isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 Close Shift
               </button>
             </div>
@@ -175,4 +211,4 @@ export const CloseShiftModal = ({
       </div>
     </div>
   );
-};
+}

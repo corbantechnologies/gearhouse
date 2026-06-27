@@ -1,63 +1,28 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import {
   getPOSBundles,
-  createPOSBundle,
-  updatePOSBundle,
-  deletePOSBundle,
+  getPOSBundle,
 } from "@/services/posbundles";
+import useAxiosAuth from "../authentication/useAxiosAuth";
 
 export const useFetchPOSBundles = (activeOnly: boolean = false) => {
-  const { data: session } = useSession();
-  const token = session?.user?.token;
+  const header = useAxiosAuth()
 
   return useQuery({
     queryKey: ["posbundles", activeOnly],
-    queryFn: () => getPOSBundles(activeOnly, { headers: { Authorization: `Bearer ${token}` } }),
-    enabled: !!token,
+    queryFn: () => getPOSBundles(activeOnly, header),
+    enabled: !!header,
   });
 };
 
-export const useCreatePOSBundle = () => {
-  const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const token = session?.user?.token;
+export const useFetchPOSBundle = (id: string) => {
+  const header = useAxiosAuth()
 
-  return useMutation({
-    mutationFn: (data: FormData) =>
-      createPOSBundle(data, { headers: { Authorization: `Bearer ${token}` } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posbundles"] });
-    },
-  });
-};
-
-export const useUpdatePOSBundle = () => {
-  const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const token = session?.user?.token;
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: FormData }) =>
-      updatePOSBundle(id, data, { headers: { Authorization: `Bearer ${token}` } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posbundles"] });
-    },
-  });
-};
-
-export const useDeletePOSBundle = () => {
-  const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const token = session?.user?.token;
-
-  return useMutation({
-    mutationFn: (id: string) =>
-      deletePOSBundle(id, { headers: { Authorization: `Bearer ${token}` } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posbundles"] });
-    },
+  return useQuery({
+    queryKey: ["posbundles", id],
+    queryFn: () => getPOSBundle(id, header),
+    enabled: !!header && !!id,
   });
 };
