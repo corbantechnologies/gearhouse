@@ -60,9 +60,16 @@ export default function POSStaffSection() {
         }
         setIsModalOpen(false);
       } catch (error: any) {
-        console.error(error);
-        const msg = error?.response?.data?.email?.[0] || error?.response?.data?.detail || "Failed to save staff account";
-        toast.error(msg, { id: tId });
+        console.log(error?.response?.data);
+        const errData = error?.response?.data;
+        let msg = "Failed to save staff account";
+        if (errData && typeof errData === "object") {
+          msg = errData.detail || 
+                errData.non_field_errors?.[0] || 
+                Object.values(errData).flat()[0] || 
+                "Failed to save staff account";
+        }
+        toast.error(msg as string, { id: tId });
       } finally {
         setSubmitting(false);
       }

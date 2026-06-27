@@ -137,7 +137,7 @@ export const getPOSStaffList = async (headers: {
   headers: { Authorization: string };
 }): Promise<User[]> => {
   const response: AxiosResponse<User[]> = await apiActions.get(
-    `/api/v1/auth/pos/staff`,
+    `/api/v1/auth/pos/staff/`,
     headers
   );
   return response.data;
@@ -148,7 +148,7 @@ export const createPOSStaff = async (
   headers: { headers: { Authorization: string } }
 ): Promise<User> => {
   const response: AxiosResponse<User> = await apiActions.post(
-    `/api/v1/auth/pos/staff`,
+    `/api/v1/auth/pos/staff/create/`,
     data,
     headers
   );
@@ -160,7 +160,7 @@ export const getPOSStaff = async (
   headers: { headers: { Authorization: string } }
 ): Promise<User> => {
   const response: AxiosResponse<User> = await apiActions.get(
-    `/api/v1/auth/pos/staff${usercode}/`,
+    `/api/v1/auth/pos/staff/${usercode}/`,
     headers
   );
   return response.data;
@@ -172,7 +172,7 @@ export const updatePOSStaff = async (
   headers: { headers: { Authorization: string } }
 ): Promise<User> => {
   const response: AxiosResponse<User> = await apiActions.patch(
-    `/api/v1/auth/pos/staff${usercode}/`,
+    `/api/v1/auth/pos/staff/${usercode}/`,
     data,
     headers
   );
@@ -184,7 +184,7 @@ export const deactivatePOSStaff = async (
   headers: { headers: { Authorization: string } }
 ): Promise<{ message: string }> => {
   const response = await apiActions.delete(
-    `/api/v1/auth/pos/staff${usercode}/`,
+    `/api/v1/auth/pos/staff/${usercode}/`,
     headers
   );
   return response.data;
