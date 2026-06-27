@@ -5,9 +5,10 @@ import {
   useFetchInventory,
   useFetchLowStock,
   useFetchStockAdjustments,
-  useCreateStockAdjustment,
 } from "@/hooks/stockadjustments/actions";
-import { InventoryItem } from "@/services/stockadjustments";
+import { InventoryItem, createStockAdjustment } from "@/services/stockadjustments";
+import { useQueryClient } from "@tanstack/react-query";
+import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 import SectionHeader from "@/components/dashboard/SectionHeader";
 import {
   Search,
@@ -49,7 +50,9 @@ const AdjustModal = ({
   item: InventoryItem;
   onClose: () => void;
 }) => {
-  const { mutateAsync, isPending } = useCreateStockAdjustment();
+  const queryClient = useQueryClient();
+  const header = useAxiosAuth();
+  const [isPending, setIsPending] = useState(false);
   const [type, setType] = useState<"add" | "remove">("add");
   const [qty, setQty] = useState(1);
   const [reason, setReason] = useState<string>("RESTOCK");
@@ -61,13 +64,17 @@ const AdjustModal = ({
 
   const handleSubmit = async () => {
     setError("");
+    setIsPending(true);
     try {
-      await mutateAsync({
+      await createStockAdjustment({
         variant: item.variant_id,
         quantity_change: type === "add" ? qty : -qty,
         reason: reason as any,
         notes: notes || undefined,
-      });
+      }, header);
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["lowstock"] });
+      queryClient.invalidateQueries({ queryKey: ["stockadjustments"] });
       setSuccess(true);
       setTimeout(onClose, 1200);
     } catch (err: any) {
@@ -76,6 +83,8 @@ const AdjustModal = ({
           err?.response?.data?.detail ||
           "Adjustment failed.",
       );
+    } finally {
+      setIsPending(false);
     }
   };
 

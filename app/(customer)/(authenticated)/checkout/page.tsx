@@ -3,7 +3,7 @@
 
 import { useFetchCart } from "@/hooks/cart/actions";
 import { useFetchPickupStations } from "@/hooks/pickupstations/actions";
-import { useCheckoutCart } from "@/hooks/cart/mutations";
+
 import { formatCurrency } from "@/components/dashboard/utils";
 import {
   Loader2,

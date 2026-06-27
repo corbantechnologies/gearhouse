@@ -11,11 +11,9 @@ import { useRouter } from "next/navigation";
 import { Cart } from "@/services/cart";
 import { CartItem } from "@/services/cartitems";
 import { useFetchCart } from "@/hooks/cart/actions";
-import {
-  useAddToCart,
-  useUpdateCartItem,
-  useDeleteCartItem,
-} from "@/hooks/cartitems/mutations";
+import { addToCart as apiAddToCart, updateCartItem as apiUpdateCartItem, deleteCartItem as apiDeleteCartItem } from "@/services/cartitems";
+import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
 // Extended interface for Item input
@@ -50,9 +48,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     enabled: isAuthenticated,
   });
 
-  const { mutateAsync: serverAdd } = useAddToCart();
-  const { mutateAsync: serverUpdate } = useUpdateCartItem();
-  const { mutateAsync: serverDelete } = useDeleteCartItem();
+  const header = useAxiosAuth();
+  const queryClient = useQueryClient();
 
   // ── Cart operations ──
   const addToCart = async (input: CartItemInput) => {
@@ -61,8 +58,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       router.push("/login");
       return;
     }
-    await serverAdd({ variant: input.variant_sku, quantity: input.quantity });
-    toast.success("Added to cart!");
+    try {
+      await apiAddToCart({ variant: input.variant_sku, quantity: input.quantity }, header);
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      toast.success("Added to cart!");
+    } catch (err: any) {
+      toast.error("Failed to add item to cart");
+      console.error(err);
+    }
   };
 
   const updateItem = async (reference: string, quantity: number) => {
@@ -72,12 +75,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     if (!isAuthenticated) return;
-    await serverUpdate({ reference, quantity });
+    try {
+      await apiUpdateCartItem(reference, { quantity }, header);
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    } catch (err: any) {
+      toast.error("Failed to update cart");
+      console.error(err);
+    }
   };
 
   const removeItem = async (reference: string) => {
     if (!isAuthenticated) return;
-    await serverDelete(reference);
+    try {
+      await apiDeleteCartItem(reference, header);
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      toast.success("Item removed from cart");
+    } catch (err: any) {
+      toast.error("Failed to remove item");
+      console.error(err);
+    }
   };
 
   // ── Context value ──

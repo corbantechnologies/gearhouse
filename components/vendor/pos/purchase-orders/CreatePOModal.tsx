@@ -1,17 +1,19 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useCreatePurchaseOrder } from "@/hooks/purchaseorders/actions";
 import { useFetchInventory } from "@/hooks/stockadjustments/actions";
 import { X, Search, Plus, Minus, Loader2, Package } from "lucide-react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { createPurchaseOrder } from "@/services/purchaseorders";
+import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function CreatePOModal({ onClose }: { onClose: () => void }) {
   const { data: inventory = [], isLoading: isInvLoading } = useFetchInventory();
-  const createMutation = useCreatePurchaseOrder();
+  const header = useAxiosAuth();
+  const queryClient = useQueryClient();
 
-  const [supplierName, setSupplierName] = useState("");
-  const [expectedDate, setExpectedDate] = useState("");
-  const [notes, setNotes] = useState("");
   const [search, setSearch] = useState("");
   const [selectedItems, setSelectedItems] = useState<{
     variantId: string;
@@ -60,27 +62,39 @@ export default function CreatePOModal({ onClose }: { onClose: () => void }) {
     setSelectedItems(selectedItems.filter((i) => i.variantId !== variantId));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedItems.length === 0) return alert("Please add at least one item.");
+  const formik = useFormik({
+    initialValues: {
+      supplierName: "",
+      expectedDate: "",
+      notes: "",
+    },
+    validationSchema: Yup.object({
+      supplierName: Yup.string().required("Supplier Name is required"),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
+      if (selectedItems.length === 0) return alert("Please add at least one item.");
 
-    try {
-      await createMutation.mutateAsync({
-        supplier_name: supplierName,
-        expected_date: expectedDate || undefined,
-        notes: notes || undefined,
-        items: selectedItems.map((item) => ({
-          variant: item.variantId,
-          quantity: item.quantity,
-          cost_price: item.costPrice,
-        })),
-      });
-      onClose();
-    } catch (error) {
-      console.error(error);
-      alert("Failed to create Purchase Order.");
-    }
-  };
+      try {
+        await createPurchaseOrder({
+          supplier_name: values.supplierName,
+          expected_date: values.expectedDate || undefined,
+          notes: values.notes || undefined,
+          items: selectedItems.map((item) => ({
+            variant: item.variantId,
+            quantity: item.quantity,
+            cost_price: item.costPrice,
+          })),
+        }, header);
+        queryClient.invalidateQueries({ queryKey: ["purchaseorders"] });
+        onClose();
+      } catch (error) {
+        console.error(error);
+        alert("Failed to create Purchase Order.");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -96,42 +110,41 @@ export default function CreatePOModal({ onClose }: { onClose: () => void }) {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col lg:flex-row gap-8">
           {/* Left: Form Details */}
-          <div className="flex-1 space-y-5">
-            <div>
-              <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-2">
-                Supplier Name
-              </label>
-              <input
-                type="text"
-                required
-                value={supplierName}
-                onChange={(e) => setSupplierName(e.target.value)}
-                placeholder="e.g. Acme Corp"
-                className="w-full h-11 px-4 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-2">
-                Expected Delivery Date
-              </label>
-              <input
-                type="date"
-                value={expectedDate}
-                onChange={(e) => setExpectedDate(e.target.value)}
-                className="w-full h-11 px-4 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-2">
-                Notes
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                className="w-full px-4 py-3 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none resize-none"
-              />
-            </div>
+          <form onSubmit={formik.handleSubmit} className="flex-1 flex flex-col h-full">
+            <div className="space-y-5">
+              <div>
+                <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-2">
+                  Supplier Name
+                </label>
+                <input
+                  type="text"
+                  {...formik.getFieldProps("supplierName")}
+                  placeholder="e.g. Acme Corp"
+                  className={`w-full h-11 px-4 bg-[#F5F5F7] border rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
+                    formik.touched.supplierName && formik.errors.supplierName ? "border-red-500" : "border-transparent"
+                  }`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-2">
+                  Expected Delivery Date
+                </label>
+                <input
+                  type="date"
+                  {...formik.getFieldProps("expectedDate")}
+                  className="w-full h-11 px-4 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-2">
+                  Notes
+                </label>
+                <textarea
+                  {...formik.getFieldProps("notes")}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none resize-none"
+                />
+              </div>
 
             {/* Selected Items List */}
             <div className="mt-8">
@@ -182,7 +195,8 @@ export default function CreatePOModal({ onClose }: { onClose: () => void }) {
                 </div>
               )}
             </div>
-          </div>
+            </div>
+          </form>
 
           {/* Right: Product Search */}
           <div className="flex-1 lg:max-w-sm flex flex-col h-[400px] lg:h-auto border border-[#F5F5F7] rounded-2xl overflow-hidden bg-[#FAFAFA]">
@@ -233,11 +247,11 @@ export default function CreatePOModal({ onClose }: { onClose: () => void }) {
             Cancel
           </button>
           <button
-            onClick={handleSubmit}
-            disabled={createMutation.isPending || selectedItems.length === 0 || !supplierName}
+            onClick={() => formik.submitForm()}
+            disabled={formik.isSubmitting || selectedItems.length === 0 || !formik.values.supplierName}
             className="px-6 py-2.5 bg-[#0071E3] text-white rounded-xl text-sm font-semibold hover:bg-[#0077ED] transition-colors disabled:opacity-50 flex items-center gap-2"
           >
-            {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            {formik.isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
             Create Order
           </button>
         </div>

@@ -2,10 +2,14 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useFetchInventory } from "@/hooks/stockadjustments/actions";
-import { useFetchPOSSales, useVoidPOSSale } from "@/hooks/possales/actions";
+import { useFetchPOSSales } from "@/hooks/possales/actions";
 import { useFetchCurrentShift } from "@/hooks/posshifts/actions";
 import { useFetchAccount } from "@/hooks/accounts/actions";
-import { useLookupCustomer, useCreateWalkInCustomer } from "@/hooks/walkincustomers/actions";
+import { useLookupCustomer } from "@/hooks/walkincustomers/actions";
+import { voidPOSSale } from "@/services/possales";
+import { createWalkInCustomer } from "@/services/walkincustomers";
+import { useQueryClient } from "@tanstack/react-query";
+import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 import { InventoryItem } from "@/services/stockadjustments";
 import { POSSale, CreatePOSSaleItem } from "@/services/possales";
 import SectionHeader from "@/components/dashboard/SectionHeader";
@@ -238,8 +242,36 @@ export default function POSPage() {
   const { data: currentShift, isLoading: shiftLoading } = useFetchCurrentShift();
   const { data: inventory = [], isLoading: inventoryLoading } = useFetchInventory();
   const { data: recentSales = [] } = useFetchPOSSales();
-  const voidMutation = useVoidPOSSale();
-  const createCustomerMutation = useCreateWalkInCustomer();
+  const queryClient = useQueryClient();
+  const header = useAxiosAuth();
+  
+  const [isVoiding, setIsVoiding] = useState<string | null>(null);
+  const [isEnrolling, setIsEnrolling] = useState(false);
+
+  const handleVoidSale = async (ref: string) => {
+    setIsVoiding(ref);
+    try {
+      await voidPOSSale(ref, header);
+      queryClient.invalidateQueries({ queryKey: ["possales"] });
+    } catch (err: any) {
+      alert("Failed to void sale.");
+    } finally {
+      setIsVoiding(null);
+    }
+  };
+
+  const handleEnrollCustomer = async () => {
+    setIsEnrolling(true);
+    try {
+      await createWalkInCustomer({ phone_number: debouncedPhone, first_name: customerName }, header);
+      queryClient.invalidateQueries({ queryKey: ["walkincustomer", debouncedPhone] });
+      queryClient.invalidateQueries({ queryKey: ["walkincustomers"] });
+    } catch (err: any) {
+      alert("Failed to enroll customer.");
+    } finally {
+      setIsEnrolling(false);
+    }
+  };
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
@@ -568,11 +600,11 @@ export default function POSPage() {
                 </div>
               ) : debouncedPhone.length >= 9 && customerName ? (
                 <button
-                  onClick={() => createCustomerMutation.mutate({ phone_number: debouncedPhone, first_name: customerName })}
-                  disabled={createCustomerMutation.isPending}
+                  onClick={handleEnrollCustomer}
+                  disabled={isEnrolling}
                   className="w-full py-2 bg-[#F5F5F7] text-[#0071E3] rounded-xl text-xs font-bold hover:bg-[#E8E8ED] transition-colors"
                 >
-                  {createCustomerMutation.isPending ? "Enrolling..." : "Enroll in Loyalty Program"}
+                  {isEnrolling ? "Enrolling..." : "Enroll in Loyalty Program"}
                 </button>
               ) : null}
             </div>
@@ -606,8 +638,8 @@ export default function POSPage() {
                       key={sale.reference}
                       sale={sale}
                       currency={currency}
-                      onVoid={(ref) => voidMutation.mutate(ref)}
-                      isVoiding={voidMutation.isPending}
+                      onVoid={handleVoidSale}
+                      isVoiding={isVoiding === sale.reference}
                     />
                   ))
                 )}
