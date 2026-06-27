@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import VendorNavbar from "@/components/vendor/Navbar";
 import { useFetchAccount } from "@/hooks/accounts/actions";
@@ -16,19 +16,25 @@ export default function VendorLayout({
   const { data: session, status } = useSession();
   const { data: vendor, isLoading, isError } = useFetchAccount();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     } else if (status === "authenticated" && !isLoading && vendor) {
-      if (!vendor.is_vendor && !vendor.is_superuser) {
-        // If loaded and NOT a vendor, redirect or show message.
-        // Redirecting to login might be confusing if they are logged in as a customer.
-        // But per requirements, they shouldn't be here.
+      const isAllowed = vendor.is_vendor || vendor.is_superuser || vendor.is_pos_staff;
+      
+      if (!isAllowed) {
+        // Not a vendor, superuser, or POS staff
         router.push("/login");
+      } else if (vendor.is_pos_staff && !vendor.is_vendor && !vendor.is_superuser) {
+        // Strictly POS staff - restrict to /vendor/pos
+        if (!pathname.startsWith("/vendor/pos")) {
+          router.push("/vendor/pos");
+        }
       }
     }
-  }, [status, vendor, isLoading, router]);
+  }, [status, vendor, isLoading, router, pathname]);
 
   if (isLoading) {
     return (
@@ -55,7 +61,13 @@ export default function VendorLayout({
     );
   }
 
-  if (!vendor?.is_vendor && !vendor?.is_superuser) {
+  const isAllowed = vendor?.is_vendor || vendor?.is_superuser || vendor?.is_pos_staff;
+  if (!isAllowed) {
+    return null;
+  }
+
+  // If strictly POS staff and not on the POS page (before useEffect redirects), return null to avoid flash
+  if (vendor?.is_pos_staff && !vendor?.is_vendor && !vendor?.is_superuser && !pathname.startsWith("/vendor/pos")) {
     return null;
   }
 

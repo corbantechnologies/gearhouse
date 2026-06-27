@@ -6,6 +6,9 @@ import { User, Phone, Mail, MapPin, Shield, Edit } from "lucide-react";
 import SectionHeader from "@/components/dashboard/SectionHeader";
 import VendorModal from "@/components/vendor/Modal";
 import UpdateAccountForm from "@/forms/account/UpdateAccount";
+import POSTillsSection from "@/components/vendor/pos/settings/POSTillsSection";
+import POSStaffSection from "@/components/vendor/pos/settings/POSStaffSection";
+import POSConfigSection from "@/components/vendor/pos/settings/POSConfigSection";
 
 export default function VendorSettings() {
   const {
@@ -116,6 +119,18 @@ export default function VendorSettings() {
           }}
         />
       </VendorModal>
+
+      {vendor?.is_vendor && (
+        <div className="space-y-8 mt-12 animate-in fade-in duration-500 delay-150">
+          <SectionHeader
+            title="Point of Sale Settings"
+            description="Manage your POS registers, cashier staff, and general POS configuration."
+          />
+          <POSConfigSection />
+          <POSTillsSection />
+          <POSStaffSection />
+        </div>
+      )}
     </div>
   );
 }

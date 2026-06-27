@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { useKPI, useSales } from "@/hooks/analytics/actions";
+import { useKPI, useSales, useCashierPerformance } from "@/hooks/analytics/actions";
 import { useFetchAccount } from "@/hooks/accounts/actions";
 import { formatCurrency } from "@/components/dashboard/utils";
 import SectionHeader from "@/components/dashboard/SectionHeader";
@@ -231,6 +231,65 @@ const SalesChart = ({
   );
 };
 
+const CashierPerformanceTable = ({
+  data,
+  isLoading,
+  currency,
+}: {
+  data: any[] | undefined;
+  isLoading: boolean;
+  currency: string;
+}) => {
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-2xl border border-[#D2D2D7] p-5 h-64 animate-pulse mt-6" />
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#D2D2D7] overflow-hidden mt-6">
+      <div className="px-5 py-4 border-b border-[#F5F5F7] bg-[#FAFAFA] flex items-center gap-2">
+        <ScanLine className="w-4 h-4 text-[#0071E3]" />
+        <h3 className="text-base font-bold text-[#1D1D1F]">Cashier Performance</h3>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-[#F5F5F7]">
+              <th className="text-left px-5 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">Cashier</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">Sales Made</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">Total Revenue</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">Avg. Sale Value</th>
+              <th className="text-right px-5 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">Shift Discrepancies</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((cashier, idx) => (
+              <tr key={idx} className="border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7]/50 transition-colors">
+                <td className="px-5 py-3.5 font-semibold text-[#1D1D1F]">{cashier.cashier_name}</td>
+                <td className="px-4 py-3.5 text-right">{cashier.total_sales}</td>
+                <td className="px-4 py-3.5 text-right font-medium text-emerald-600">{formatCurrency(cashier.total_revenue, currency)}</td>
+                <td className="px-4 py-3.5 text-right text-[#6E6E73]">{formatCurrency(cashier.average_sale_value, currency)}</td>
+                <td className="px-5 py-3.5 text-right">
+                  {cashier.discrepancy_count > 0 ? (
+                    <span className="text-red-500 font-medium">{cashier.discrepancy_count} times</span>
+                  ) : (
+                    <span className="text-emerald-500 font-medium">0</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 export default function AnalyticsPage() {
   const { data: user } = useFetchAccount();
   const currency = user?.shop?.currency || "KES";
@@ -280,6 +339,7 @@ export default function AnalyticsPage() {
 
   const { data: kpi, isLoading: kpiLoading } = useKPI(params);
   const { data: sales, isLoading: salesLoading } = useSales(params);
+  const { data: cashierPerformance, isLoading: cashierLoading } = useCashierPerformance(params);
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] pb-12">
@@ -398,6 +458,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <SalesChart data={sales} isLoading={salesLoading} currency={currency} />
+            <CashierPerformanceTable data={cashierPerformance} isLoading={cashierLoading} currency={currency} />
           </div>
 
           <div className="space-y-5">

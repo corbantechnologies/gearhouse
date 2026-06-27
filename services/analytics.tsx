@@ -30,6 +30,14 @@ export interface Sales {
   pos_sales: number;
 }
 
+export interface CashierPerformance {
+  cashier_name: string;
+  total_sales: number;
+  total_revenue: number;
+  average_sale_value: number;
+  discrepancy_count: number;
+}
+
 export interface AnalyticsParams {
   start_date?: string;
   end_date?: string;
@@ -56,6 +64,18 @@ export const getSales = async (
 ): Promise<Sales[]> => {
   const response: AxiosResponse<Sales[]> = await apiActions.get(
     `/api/v1/possales/analytics/sales-chart/`,
+    { ...headers, params },
+  );
+  return response.data;
+};
+
+// Cashier Performance: /api/v1/possales/analytics/cashier/
+export const getCashierPerformance = async (
+  headers: { headers: { Authorization: string } },
+  params?: AnalyticsParams,
+): Promise<CashierPerformance[]> => {
+  const response: AxiosResponse<CashierPerformance[]> = await apiActions.get(
+    `/api/v1/possales/analytics/cashier/`,
     { ...headers, params },
   );
   return response.data;
