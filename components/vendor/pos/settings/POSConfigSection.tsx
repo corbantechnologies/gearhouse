@@ -5,10 +5,13 @@ import { useFetchAccount } from "@/hooks/accounts/actions";
 import { useUpdateShop } from "@/hooks/shops/actions";
 import { Settings, Percent, Gift } from "lucide-react";
 import toast from "react-hot-toast";
+import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
+import { updateShop } from "@/services/shops";
 
 export default function POSConfigSection() {
   const { data: vendor, isLoading: isAccountLoading } = useFetchAccount();
-  const updateShopMutation = useUpdateShop();
+  const axios = useAxiosAuth()
+  const [loading, setLoading] = useState(false)
 
   const [formData, setFormData] = useState({
     tax_rate: "0.00",
@@ -30,19 +33,19 @@ export default function POSConfigSection() {
 
     const toastId = toast.loading("Saving configuration...");
     try {
+      setLoading(true)
       const data = new FormData();
       data.append("tax_rate", formData.tax_rate);
       data.append("loyalty_points_per_unit", formData.loyalty_points_per_unit.toString());
 
-      await updateShopMutation.mutateAsync({
-        shop_code: vendor.shop.shop_code,
-        data,
-      });
+      await updateShop(vendor.shop.shop_code, data, axios)
       toast.success("POS Configuration updated successfully!", { id: toastId });
     } catch (error: any) {
       console.error(error);
       const errDetail = error?.response?.data?.detail || Object.values(error?.response?.data || {})[0] || "Failed to update POS configuration";
       toast.error(typeof errDetail === "string" ? errDetail : String(errDetail), { id: toastId });
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -105,7 +108,7 @@ export default function POSConfigSection() {
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
+          {/* <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
             <h4 className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">M-Pesa Callbacks</h4>
             <p className="text-sm text-blue-900 mb-2">
               For POS M-Pesa STK push to work automatically, configure your Safaricom Paybill/Till callback to:
@@ -116,15 +119,15 @@ export default function POSConfigSection() {
             <p className="text-xs text-blue-700 mt-2">
               Set this in your backend `.env` as `MPESA_POS_CALLBACK_URL`.
             </p>
-          </div>
+          </div> */}
 
           <div>
             <button
               type="submit"
-              disabled={updateShopMutation.isPending}
+              disabled={loading}
               className="h-11 px-6 bg-[#0071E3] text-white font-semibold rounded-xl text-sm hover:bg-[#0077ED] transition-colors disabled:opacity-50"
             >
-              {updateShopMutation.isPending ? "Saving..." : "Save Configuration"}
+              {loading ? "Saving..." : "Save Configuration"}
             </button>
           </div>
         </form>
