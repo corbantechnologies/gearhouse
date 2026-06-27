@@ -10,7 +10,7 @@ export default function POSInfoPage() {
     <div className="min-h-screen bg-[#F5F5F7] pb-12">
       <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 py-6 md:py-8">
         <Link
-          href="/vendor/pos"
+          href="/pos/register"
           className="inline-flex items-center gap-2 text-sm text-[#0071E3] hover:underline mb-6 font-medium"
         >
           <ArrowLeft className="w-4 h-4" />

@@ -408,7 +408,7 @@ export default function POSPage() {
           />
           <div className="flex items-center gap-3">
             <Link
-              href="/vendor/pos/info"
+              href="/pos/info"
               className="flex items-center gap-2 text-sm text-[#0071E3] hover:underline font-medium"
             >
               <Info className="w-4 h-4" />
