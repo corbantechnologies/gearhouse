@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
-import { useFetchPOSSaleReceipt } from "@/hooks/possales/actions";
+import React, { useState } from "react";
+import { useFetchPOSSaleReceipt, useEmailPOSSaleReceipt, useDownloadPOSSaleReceiptPdf } from "@/hooks/possales/actions";
 import { format } from "date-fns";
-import { ArrowLeft, CheckCircle2, AlertCircle, XCircle, Printer } from "lucide-react";
+import { ArrowLeft, CheckCircle2, AlertCircle, XCircle, Printer, Mail, Loader2, Download } from "lucide-react";
+import toast from "react-hot-toast";
 import Link from "next/link";
 import { POSSaleItem, POSSalePayment } from "@/services/possales";
 import { useParams } from "next/navigation";
@@ -12,6 +13,46 @@ export default function POSSaleDetailsPage() {
   const params = useParams();
   const reference = params.reference as string;
   const { data: receipt, isLoading, isError } = useFetchPOSSaleReceipt(reference);
+  const emailMutation = useEmailPOSSaleReceipt();
+  const downloadMutation = useDownloadPOSSaleReceiptPdf();
+  
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+
+  const handleDownload = () => {
+    downloadMutation.mutate(reference, {
+      onSuccess: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Receipt_${reference}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        toast.success("Receipt downloaded!");
+      },
+      onError: (err: any) => {
+        toast.error(err?.response?.data?.error || "Failed to download receipt.");
+      }
+    });
+  };
+
+  const handleSendEmail = () => {
+    emailMutation.mutate(
+      { reference, email: emailInput || undefined },
+      {
+        onSuccess: () => {
+          toast.success("Receipt emailed successfully!");
+          setShowEmailPrompt(false);
+          setEmailInput("");
+        },
+        onError: (err: any) => {
+          toast.error(err?.response?.data?.error || "Failed to send receipt.");
+        },
+      }
+    );
+  };
 
   const getStatusBadge = (status: string | undefined) => {
     switch (status) {
@@ -60,7 +101,7 @@ export default function POSSaleDetailsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+    <div className="container mx-auto space-y-6 pb-12">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-4">
@@ -80,9 +121,50 @@ export default function POSSaleDetailsPage() {
             </p>
           </div>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#D2D2D7] rounded-full text-sm font-semibold text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors shadow-sm">
-          <Printer className="w-4 h-4" /> Print Receipt
-        </button>
+        <div className="flex items-center gap-3 print:hidden">
+          <div className="relative">
+            {showEmailPrompt ? (
+              <div className="flex items-center gap-2 bg-white border border-[#D2D2D7] rounded-full p-1 pl-3 shadow-sm animate-in fade-in slide-in-from-right-4">
+                <input
+                  type="email"
+                  placeholder="Customer email..."
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  className="text-sm outline-none w-40"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSendEmail}
+                  disabled={emailMutation.isPending}
+                  className="p-1.5 bg-[#0071E3] text-white rounded-full hover:bg-[#0077ED] disabled:opacity-50"
+                >
+                  {emailMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={() => setShowEmailPrompt(false)}
+                  className="p-1.5 text-[#86868B] hover:bg-[#F5F5F7] rounded-full"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setShowEmailPrompt(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-[#D2D2D7] rounded-full text-sm font-semibold text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors shadow-sm"
+              >
+                <Mail className="w-4 h-4" /> Email Receipt
+              </button>
+            )}
+          </div>
+          <button 
+            onClick={handleDownload}
+            disabled={downloadMutation.isPending}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-[#D2D2D7] rounded-full text-sm font-semibold text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors shadow-sm disabled:opacity-50"
+          >
+            {downloadMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Download PDF
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

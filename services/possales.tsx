@@ -207,6 +207,20 @@ export const sendPOSSaleReceiptEmail = async (
   return response.data;
 };
 
+export const downloadPOSSaleReceiptPdf = async (
+  reference: string,
+  headers: { headers: { Authorization: string } },
+): Promise<Blob> => {
+  const response = await apiActions.get(
+    `/api/v1/possales/${reference}/download-receipt/`,
+    {
+      ...headers,
+      responseType: 'blob',
+    },
+  );
+  return response.data;
+};
+
 export const triggerMpesaSTKPush = async (
   reference: string,
   phoneNumber: string,

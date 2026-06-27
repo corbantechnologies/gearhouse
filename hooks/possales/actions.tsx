@@ -1,12 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   getPOSSales,
   getPOSSale,
   getPOSSaleReceipt,
   searchPOSProducts,
   lookupPOSSku,
+  sendPOSSaleReceiptEmail,
+  downloadPOSSaleReceiptPdf,
 } from "@/services/possales";
 import useAxiosAuth from "../authentication/useAxiosAuth";
 
@@ -15,6 +17,23 @@ export function useFetchPOSSales() {
   return useQuery({
     queryKey: ["pos-sales"],
     queryFn: () => getPOSSales(headers),
+  });
+}
+
+export function useEmailPOSSaleReceipt() {
+  const headers = useAxiosAuth();
+  
+  return useMutation({
+    mutationFn: ({ reference, email }: { reference: string; email?: string }) =>
+      sendPOSSaleReceiptEmail(reference, email, headers),
+  });
+}
+
+export function useDownloadPOSSaleReceiptPdf() {
+  const headers = useAxiosAuth();
+  
+  return useMutation({
+    mutationFn: (reference: string) => downloadPOSSaleReceiptPdf(reference, headers),
   });
 }
 
