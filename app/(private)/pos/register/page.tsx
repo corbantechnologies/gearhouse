@@ -253,7 +253,7 @@ export default function POSPage() {
     setIsVoiding(ref);
     try {
       await voidPOSSale(ref, header);
-      queryClient.invalidateQueries({ queryKey: ["possales"] });
+      queryClient.invalidateQueries({ queryKey: ["pos-sales"] });
     } catch (err: any) {
       toast.error("Failed to void sale.");
     } finally {
@@ -415,7 +415,7 @@ export default function POSPage() {
     
     // Trigger refetch of critical data
     queryClient.invalidateQueries({ queryKey: ["inventory"] });
-    queryClient.invalidateQueries({ queryKey: ["possales"] });
+    queryClient.invalidateQueries({ queryKey: ["pos-sales"] });
     queryClient.invalidateQueries({ queryKey: ["walkincustomers"] });
   };
 
