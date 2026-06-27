@@ -28,13 +28,11 @@ export default function VendorLayout({
         // Not a vendor, superuser, or POS staff
         router.push("/login");
       } else if (vendor.is_pos_staff && !vendor.is_vendor && !vendor.is_superuser) {
-        // Strictly POS staff - restrict to /vendor/pos
-        if (!pathname.startsWith("/vendor/pos")) {
-          router.push("/vendor/pos");
-        }
+        // Strictly POS staff - restrict to POS root
+        router.push("/pos/register");
       }
     }
-  }, [status, vendor, isLoading, router, pathname]);
+  }, [status, vendor, isLoading, router]);
 
   if (isLoading) {
     return (
@@ -66,8 +64,8 @@ export default function VendorLayout({
     return null;
   }
 
-  // If strictly POS staff and not on the POS page (before useEffect redirects), return null to avoid flash
-  if (vendor?.is_pos_staff && !vendor?.is_vendor && !vendor?.is_superuser && !pathname.startsWith("/vendor/pos")) {
+  // If strictly POS staff redirect handles this, but just in case
+  if (vendor?.is_pos_staff && !vendor?.is_vendor && !vendor?.is_superuser) {
     return null;
   }
 

@@ -30,9 +30,9 @@ export default function VendorNavbar() {
     { name: "Products", href: "/vendor/products", icon: ShoppingBag },
     { name: "Logistics", href: "/vendor/logistics", icon: Truck },
     { name: "Shop Orders", href: "/vendor/shop-orders", icon: LucideShoppingBasket },
-    { name: "Purchase Orders", href: "/vendor/purchase-orders", icon: Boxes }, // We will build this next
-    { name: "POS Register", href: "/vendor/pos", icon: ScanLine },
-    { name: "Customers", href: "/vendor/customers", icon: Users },
+    { name: "Purchase Orders", href: "/vendor/purchase-orders", icon: Boxes },
+    { name: "POS Register", href: "/pos/register", icon: ScanLine },
+    { name: "Customers", href: "/pos/customers", icon: Users },
     { name: "Inventory", href: "/vendor/inventory", icon: Boxes },
     { name: "Analytics", href: "/vendor/analytics", icon: BarChart3 },
     { name: "Settings", href: "/vendor/settings", icon: Settings },

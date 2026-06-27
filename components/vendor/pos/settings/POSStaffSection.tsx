@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useFetchPOSStaffList, useCreatePOSStaff, useUpdatePOSStaff, useDeactivatePOSStaff } from "@/hooks/accounts/actions";
 import { Users, Plus, Edit, Trash2, ShieldAlert } from "lucide-react";
 import VendorModal from "@/components/vendor/Modal";
+import toast from "react-hot-toast";
 
 export default function POSStaffSection() {
   const { data: staffList = [], isLoading } = useFetchPOSStaffList();
@@ -46,6 +47,7 @@ export default function POSStaffSection() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const tId = toast.loading(editingId ? "Updating staff..." : "Creating staff account...");
     try {
       if (editingId) {
         await updateMutation.mutateAsync({
@@ -57,6 +59,7 @@ export default function POSStaffSection() {
             is_active: formData.is_active,
           },
         });
+        toast.success("Staff updated successfully", { id: tId });
       } else {
         await createMutation.mutateAsync({
           email: formData.email,
@@ -64,16 +67,25 @@ export default function POSStaffSection() {
           last_name: formData.last_name,
           phone_number: formData.phone_number,
         });
+        toast.success("Staff account created successfully", { id: tId });
       }
       setIsModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      const msg = error?.response?.data?.email?.[0] || error?.response?.data?.detail || "Failed to save staff account";
+      toast.error(msg, { id: tId });
     }
   };
 
   const handleDeactivate = async (usercode: string) => {
-    if (confirm("Are you sure you want to deactivate this cashier? They will no longer be able to log in or process sales.")) {
-      await deactivateMutation.mutateAsync(usercode);
+    if (window.confirm("Are you sure you want to deactivate this cashier? They will no longer be able to log in or process sales.")) {
+      const tId = toast.loading("Deactivating...");
+      try {
+        await deactivateMutation.mutateAsync(usercode);
+        toast.success("Staff deactivated successfully", { id: tId });
+      } catch (error: any) {
+        toast.error(error?.response?.data?.detail || "Failed to deactivate", { id: tId });
+      }
     }
   };
 

@@ -21,7 +21,7 @@ export default function Navbar() {
   const { data: session } = useSession();
   const { data: categories } = useFetchCategories();
   const { cart } = useCart();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isMobileShopOpen, setIsMobileShopOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -43,83 +43,7 @@ export default function Navbar() {
             <img src="/logo.svg" alt="GearHouse Africa" className="h-8 w-auto" />
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className="text-sm text-[#1D1D1F]/80 hover:text-[#0071E3] transition-colors outline-none focus-visible:ring-1 focus-visible:ring-[#0071E3] rounded px-1"
-            >
-              Home
-            </Link>
-
-            {/* Shop Dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => setIsShopOpen(true)}
-              onMouseLeave={() => setIsShopOpen(false)}
-            >
-              <button
-                className="flex items-center text-sm text-[#1D1D1F]/80 hover:text-[#0071E3] transition-colors outline-none focus-visible:ring-1 focus-visible:ring-[#0071E3] rounded px-1"
-                aria-expanded={isShopOpen}
-                onClick={() => setIsShopOpen(!isShopOpen)}
-              >
-                Shop <ChevronDown className={`w-3.5 h-3.5 ml-1 transition-transform ${isShopOpen ? "rotate-180" : ""}`} />
-              </button>
-
-              {isShopOpen && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 w-64 pt-3 animate-in fade-in duration-150">
-                  <div className="bg-white rounded-2xl shadow-2xl border border-[#D2D2D7]/60 overflow-hidden p-2">
-                    <Link
-                      href="/shop"
-                      className="flex items-center px-3 py-2.5 text-sm text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-lg transition-colors font-medium"
-                    >
-                      All Products
-                    </Link>
-                    <div className="h-px bg-[#D2D2D7]/50 my-1" />
-                    {activeCategories.length > 0 ? (
-                      activeCategories.map((category) => (
-                        <div key={category.reference}>
-                          <Link
-                            href={`/shop?category=${category.reference}`}
-                            className="flex items-center px-3 py-2.5 text-sm text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-lg transition-colors"
-                          >
-                            {category.name}
-                          </Link>
-                          {category.subcategories &&
-                            category.subcategories.length > 0 && (
-                              <div className="pl-4 pb-1">
-                                {category.subcategories
-                                  .filter((s) => s.is_active)
-                                  .map((sub) => (
-                                    <Link
-                                      key={sub.reference}
-                                      href={`/shop?subcategory=${sub.reference}`}
-                                      className="flex items-center px-3 py-1.5 text-xs text-[#6E6E73] hover:text-[#0071E3] rounded-lg transition-colors"
-                                    >
-                                      {sub.name}
-                                    </Link>
-                                  ))}
-                              </div>
-                            )}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="p-3 text-xs text-[#86868B] text-center">
-                        No categories yet.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Link
-              href="/orders"
-              className="text-sm text-[#1D1D1F]/80 hover:text-[#0071E3] transition-colors outline-none focus-visible:ring-1 focus-visible:ring-[#0071E3] rounded px-1"
-            >
-              Orders
-            </Link>
-          </div>
+          {/* Desktop Navigation has been moved to the drawer */}
 
           {/* Right: User + Cart + Mobile Toggle */}
           <div className="flex items-center space-x-4 md:space-x-5">
@@ -138,10 +62,10 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Mobile Menu Toggle */}
+            {/* Menu Toggle */}
             <button
-              className="md:hidden text-[#1D1D1F] outline-none focus-visible:ring-1 focus-visible:ring-[#0071E3] rounded"
-              onClick={() => setIsMobileMenuOpen(true)}
+              className="text-[#1D1D1F] outline-none focus-visible:ring-1 focus-visible:ring-[#0071E3] rounded ml-2"
+              onClick={() => setIsMenuOpen(true)}
               aria-label="Open menu"
             >
               <Menu className="w-6 h-6" />
@@ -152,13 +76,13 @@ export default function Navbar() {
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
+      {/* Drawer Menu */}
+      {isMenuOpen && (
         <div className="fixed inset-0 z-[100] flex justify-end">
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/30 backdrop-blur-sm animate-in fade-in duration-200"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={() => setIsMenuOpen(false)}
           />
 
           {/* Drawer */}
@@ -171,7 +95,7 @@ export default function Navbar() {
               </span>
               <button
                 className="text-[#6E6E73] hover:text-[#1D1D1F] transition-colors outline-none rounded"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => setIsMenuOpen(false)}
                 aria-label="Close menu"
               >
                 <X className="w-5 h-5" />
@@ -182,7 +106,7 @@ export default function Navbar() {
               <Link
                 href="/"
                 className="flex items-center px-3 py-3 text-[#1D1D1F] font-medium rounded-xl hover:bg-[#F5F5F7] transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
@@ -204,7 +128,7 @@ export default function Navbar() {
                   <div className="pl-3 mt-1 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
                     <Link
                       href="/shop"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={() => setIsMenuOpen(false)}
                       className="flex items-center px-3 py-2.5 text-sm text-[#1D1D1F] rounded-xl hover:bg-[#F5F5F7] transition-colors font-medium"
                     >
                       All Products
@@ -213,7 +137,7 @@ export default function Navbar() {
                       <div key={category.reference}>
                         <Link
                           href={`/shop?category=${category.reference}`}
-                          onClick={() => setIsMobileMenuOpen(false)}
+                          onClick={() => setIsMenuOpen(false)}
                           className="flex items-center px-3 py-2.5 text-sm text-[#1D1D1F] rounded-xl hover:bg-[#F5F5F7] transition-colors"
                         >
                           {category.name}
@@ -228,7 +152,7 @@ export default function Navbar() {
                                     key={sub.reference}
                                     href={`/shop?subcategory=${sub.reference}`}
                                     className="flex items-center px-3 py-2 text-xs text-[#6E6E73] rounded-xl hover:text-[#0071E3] transition-colors"
-                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    onClick={() => setIsMenuOpen(false)}
                                   >
                                     {sub.name}
                                   </Link>
@@ -244,7 +168,7 @@ export default function Navbar() {
               <Link
                 href="/orders"
                 className="flex items-center px-3 py-3 text-[#1D1D1F] font-medium rounded-xl hover:bg-[#F5F5F7] transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => setIsMenuOpen(false)}
               >
                 My Orders
               </Link>
@@ -254,14 +178,14 @@ export default function Navbar() {
                   <Link
                     href="/account"
                     className="flex items-center gap-3 px-3 py-3 text-[#1D1D1F] font-medium rounded-xl hover:bg-[#F5F5F7] transition-colors"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => setIsMenuOpen(false)}
                   >
                     <User className="w-4 h-4 text-[#6E6E73]" /> Profile
                   </Link>
                   <button
                     onClick={() => {
                       signOut();
-                      setIsMobileMenuOpen(false);
+                      setIsMenuOpen(false);
                     }}
                     className="flex items-center gap-3 px-3 py-3 text-red-500 font-medium rounded-xl hover:bg-red-50 transition-colors w-full text-left"
                   >
@@ -272,7 +196,7 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   className="flex items-center gap-3 px-3 py-3 text-[#0071E3] font-medium rounded-xl hover:bg-[#F5F5F7] transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   <User className="w-4 h-4" /> Login / Register
                 </Link>

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useFetchPOSTills, useCreatePOSTill, useUpdatePOSTill, useDeletePOSTill } from "@/hooks/postills/actions";
 import { Monitor, Plus, Edit, Trash2, CheckCircle2, XCircle } from "lucide-react";
 import VendorModal from "@/components/vendor/Modal";
+import toast from "react-hot-toast";
 
 export default function POSTillsSection() {
   const { data: tills = [], isLoading } = useFetchPOSTills();
@@ -28,21 +29,32 @@ export default function POSTillsSection() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const tId = toast.loading(editingId ? "Updating Till..." : "Creating Till...");
     try {
       if (editingId) {
         await updateMutation.mutateAsync({ id: editingId, data: formData });
+        toast.success("Till updated successfully", { id: tId });
       } else {
         await createMutation.mutateAsync({ name: formData.name });
+        toast.success("Till created successfully", { id: tId });
       }
       setIsModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      const msg = error?.response?.data?.name?.[0] || error?.response?.data?.detail || "An error occurred";
+      toast.error(msg, { id: tId });
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this Till?")) {
-      await deleteMutation.mutateAsync(id);
+    if (window.confirm("Are you sure you want to delete this Till?")) {
+      const tId = toast.loading("Deleting Till...");
+      try {
+        await deleteMutation.mutateAsync(id);
+        toast.success("Till deleted successfully", { id: tId });
+      } catch (error: any) {
+        toast.error(error?.response?.data?.detail || "Failed to delete till", { id: tId });
+      }
     }
   };
 

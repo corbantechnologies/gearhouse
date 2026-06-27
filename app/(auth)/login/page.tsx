@@ -37,7 +37,7 @@ export default function Login() {
         } else if (session?.user?.is_superuser === true) {
           router.push("/vendor/dashboard");
         } else if (session?.user?.is_pos_staff === true) {
-          router.push("/vendor/pos");
+          router.push("/pos/register");
         } else {
           router.push("/");
         }

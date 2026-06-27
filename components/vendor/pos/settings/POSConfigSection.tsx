@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useFetchAccount } from "@/hooks/accounts/actions";
 import { useUpdateShop } from "@/hooks/shops/actions";
 import { Settings, Percent, Gift } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function POSConfigSection() {
   const { data: vendor, isLoading: isAccountLoading } = useFetchAccount();
@@ -27,6 +28,7 @@ export default function POSConfigSection() {
     e.preventDefault();
     if (!vendor?.shop?.shop_code) return;
 
+    const toastId = toast.loading("Saving configuration...");
     try {
       const data = new FormData();
       data.append("tax_rate", formData.tax_rate);
@@ -36,10 +38,11 @@ export default function POSConfigSection() {
         shop_code: vendor.shop.shop_code,
         data,
       });
-      alert("POS Configuration updated successfully!");
-    } catch (error) {
+      toast.success("POS Configuration updated successfully!", { id: toastId });
+    } catch (error: any) {
       console.error(error);
-      alert("Failed to update POS configuration");
+      const errDetail = error?.response?.data?.detail || Object.values(error?.response?.data || {})[0] || "Failed to update POS configuration";
+      toast.error(typeof errDetail === "string" ? errDetail : String(errDetail), { id: toastId });
     }
   };
 
