@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { useKPI, useSales, useCashierPerformance } from "@/hooks/analytics/actions";
+import {
+  useKPI,
+  useSales,
+  useCashierPerformance,
+} from "@/hooks/analytics/actions";
 import { useFetchAccount } from "@/hooks/accounts/actions";
 import { formatCurrency } from "@/components/dashboard/utils";
 import SectionHeader from "@/components/dashboard/SectionHeader";
@@ -125,13 +129,19 @@ const SalesChart = ({
   currency,
 }: {
   data:
-    | { date: string; total_revenue: number; online_revenue: number; pos_revenue: number }[]
+    | {
+        date: string;
+        total_revenue: number;
+        online_revenue: number;
+        pos_revenue: number;
+      }[]
     | undefined;
   isLoading: boolean;
   currency: string;
 }) => {
   const maxRevenue = useMemo(() => {
-    if (!data || data.length === 0) return 100;
+    // Check if data is missing, not an array, or empty
+    if (!data || !Array.isArray(data) || data.length === 0) return 100;
     return Math.max(...data.map((d) => d.total_revenue)) * 1.1;
   }, [data]);
 
@@ -150,7 +160,9 @@ const SalesChart = ({
           <BarChart3 className="w-6 h-6 text-[#D2D2D7]" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-semibold text-[#1D1D1F]">No sales data yet</p>
+          <p className="text-sm font-semibold text-[#1D1D1F]">
+            No sales data yet
+          </p>
           <p className="text-xs text-[#86868B] mt-1">
             Data will appear here once you start making sales.
           </p>
@@ -179,53 +191,56 @@ const SalesChart = ({
       </div>
 
       <div className="h-64 flex items-end gap-1.5 md:gap-3 overflow-x-auto pb-2">
-        {data.map((item, index) => {
-          const totalHeight = (item.total_revenue / maxRevenue) * 100;
-          const onlineHeight =
-            item.total_revenue > 0
-              ? (item.online_revenue / item.total_revenue) * totalHeight
-              : 0;
-          const posHeight = totalHeight - onlineHeight;
-          return (
-            <div
-              key={index}
-              className="group relative flex flex-col items-center flex-1 min-w-[28px]"
-            >
-              {/* Tooltip */}
-              <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-[#1D1D1F] text-white text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap pointer-events-none shadow-lg">
-                <p className="font-bold">{formatCurrency(item.total_revenue, currency)}</p>
-                <p className="text-[#86868B]">
-                  Online: {formatCurrency(item.online_revenue, currency)}
-                </p>
-                <p className="text-emerald-400">
-                  POS: {formatCurrency(item.pos_revenue, currency)}
-                </p>
-                <p className="text-[#86868B] mt-0.5">{item.date}</p>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#1D1D1F]" />
-              </div>
+        {Array.isArray(data) &&
+          data.map((item, index) => {
+            const totalHeight = (item.total_revenue / maxRevenue) * 100;
+            const onlineHeight =
+              item.total_revenue > 0
+                ? (item.online_revenue / item.total_revenue) * totalHeight
+                : 0;
+            const posHeight = totalHeight - onlineHeight;
+            return (
+              <div
+                key={index}
+                className="group relative flex flex-col items-center flex-1 min-w-[28px]"
+              >
+                {/* Tooltip */}
+                <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-[#1D1D1F] text-white text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap pointer-events-none shadow-lg">
+                  <p className="font-bold">
+                    {formatCurrency(item.total_revenue, currency)}
+                  </p>
+                  <p className="text-[#86868B]">
+                    Online: {formatCurrency(item.online_revenue, currency)}
+                  </p>
+                  <p className="text-emerald-400">
+                    POS: {formatCurrency(item.pos_revenue, currency)}
+                  </p>
+                  <p className="text-[#86868B] mt-0.5">{item.date}</p>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#1D1D1F]" />
+                </div>
 
-              {/* Stacked bar */}
-              <div className="w-full flex flex-col-reverse rounded-t-lg overflow-hidden">
-                <div
-                  className="w-full bg-[#0071E3]/80 hover:bg-[#0071E3] transition-colors"
-                  style={{ height: `${onlineHeight * 2.56}px` }}
-                />
-                <div
-                  className="w-full bg-emerald-500/80 hover:bg-emerald-500 transition-colors"
-                  style={{ height: `${posHeight * 2.56}px` }}
-                />
-              </div>
+                {/* Stacked bar */}
+                <div className="w-full flex flex-col-reverse rounded-t-lg overflow-hidden">
+                  <div
+                    className="w-full bg-[#0071E3]/80 hover:bg-[#0071E3] transition-colors"
+                    style={{ height: `${onlineHeight * 2.56}px` }}
+                  />
+                  <div
+                    className="w-full bg-emerald-500/80 hover:bg-emerald-500 transition-colors"
+                    style={{ height: `${posHeight * 2.56}px` }}
+                  />
+                </div>
 
-              {/* X-Axis Label */}
-              <div className="mt-2 text-[10px] text-[#86868B] font-mono truncate w-full text-center hidden md:block">
-                {new Date(item.date).toLocaleDateString("en-US", {
-                  day: "numeric",
-                  month: "short",
-                })}
+                {/* X-Axis Label */}
+                <div className="mt-2 text-[10px] text-[#86868B] font-mono truncate w-full text-center hidden md:block">
+                  {new Date(item.date).toLocaleDateString("en-US", {
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
     </div>
   );
@@ -254,35 +269,61 @@ const CashierPerformanceTable = ({
     <div className="bg-white rounded-2xl border border-[#D2D2D7] overflow-hidden mt-6">
       <div className="px-5 py-4 border-b border-[#F5F5F7] bg-[#FAFAFA] flex items-center gap-2">
         <ScanLine className="w-4 h-4 text-[#0071E3]" />
-        <h3 className="text-base font-bold text-[#1D1D1F]">Cashier Performance</h3>
+        <h3 className="text-base font-bold text-[#1D1D1F]">
+          Cashier Performance
+        </h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#F5F5F7]">
-              <th className="text-left px-5 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">Cashier</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">Sales Made</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">Total Revenue</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">Avg. Sale Value</th>
-              <th className="text-right px-5 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">Shift Discrepancies</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">
+                Cashier
+              </th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">
+                Sales Made
+              </th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">
+                Total Revenue
+              </th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">
+                Avg. Sale Value
+              </th>
+              <th className="text-right px-5 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">
+                Shift Discrepancies
+              </th>
             </tr>
           </thead>
           <tbody>
-            {data.map((cashier, idx) => (
-              <tr key={idx} className="border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7]/50 transition-colors">
-                <td className="px-5 py-3.5 font-semibold text-[#1D1D1F]">{cashier.cashier_name}</td>
-                <td className="px-4 py-3.5 text-right">{cashier.total_sales}</td>
-                <td className="px-4 py-3.5 text-right font-medium text-emerald-600">{formatCurrency(cashier.total_revenue, currency)}</td>
-                <td className="px-4 py-3.5 text-right text-[#6E6E73]">{formatCurrency(cashier.average_sale_value, currency)}</td>
-                <td className="px-5 py-3.5 text-right">
-                  {cashier.discrepancy_count > 0 ? (
-                    <span className="text-red-500 font-medium">{cashier.discrepancy_count} times</span>
-                  ) : (
-                    <span className="text-emerald-500 font-medium">0</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {Array.isArray(data) &&
+              data.map((cashier, idx) => (
+                <tr
+                  key={idx}
+                  className="border-b border-[#F5F5F7] last:border-0 hover:bg-[#F5F5F7]/50 transition-colors"
+                >
+                  <td className="px-5 py-3.5 font-semibold text-[#1D1D1F]">
+                    {cashier.cashier_name}
+                  </td>
+                  <td className="px-4 py-3.5 text-right">
+                    {cashier.total_sales}
+                  </td>
+                  <td className="px-4 py-3.5 text-right font-medium text-emerald-600">
+                    {formatCurrency(cashier.total_revenue, currency)}
+                  </td>
+                  <td className="px-4 py-3.5 text-right text-[#6E6E73]">
+                    {formatCurrency(cashier.average_sale_value, currency)}
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    {cashier.discrepancy_count > 0 ? (
+                      <span className="text-red-500 font-medium">
+                        {cashier.discrepancy_count} times
+                      </span>
+                    ) : (
+                      <span className="text-emerald-500 font-medium">0</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
@@ -339,7 +380,8 @@ export default function AnalyticsPage() {
 
   const { data: kpi, isLoading: kpiLoading } = useKPI(params);
   const { data: sales, isLoading: salesLoading } = useSales(params);
-  const { data: cashierPerformance, isLoading: cashierLoading } = useCashierPerformance(params);
+  const { data: cashierPerformance, isLoading: cashierLoading } =
+    useCashierPerformance(params);
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] pb-12">
@@ -446,7 +488,9 @@ export default function AnalyticsPage() {
             </>
           ) : (
             <div className="col-span-full py-16 text-center">
-              <p className="text-sm font-semibold text-[#1D1D1F]">No KPI data available</p>
+              <p className="text-sm font-semibold text-[#1D1D1F]">
+                No KPI data available
+              </p>
               <p className="text-xs text-[#86868B] mt-1">
                 Start making sales to see your performance metrics here.
               </p>
@@ -457,8 +501,16 @@ export default function AnalyticsPage() {
         {/* Charts & Details */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <SalesChart data={sales} isLoading={salesLoading} currency={currency} />
-            <CashierPerformanceTable data={cashierPerformance} isLoading={cashierLoading} currency={currency} />
+            <SalesChart
+              data={sales}
+              isLoading={salesLoading}
+              currency={currency}
+            />
+            <CashierPerformanceTable
+              data={cashierPerformance}
+              isLoading={cashierLoading}
+              currency={currency}
+            />
           </div>
 
           <div className="space-y-5">
@@ -481,7 +533,9 @@ export default function AnalyticsPage() {
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-[#6E6E73]">Avg. Order Value</span>
                   <span className="font-medium text-[#1D1D1F]">
-                    {kpi ? formatCurrency(kpi.average_order_value, currency) : "—"}
+                    {kpi
+                      ? formatCurrency(kpi.average_order_value, currency)
+                      : "—"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
@@ -500,7 +554,7 @@ export default function AnalyticsPage() {
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-[#6E6E73]">Busiest Day</span>
                   <span className="font-medium text-[#1D1D1F]">
-                    {sales && sales.length > 0
+                    {sales && Array.isArray(sales) && sales.length > 0
                       ? new Date(
                           sales.reduce((a, b) =>
                             a.total_revenue > b.total_revenue ? a : b,
