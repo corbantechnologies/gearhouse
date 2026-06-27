@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useFetchInventory } from "@/hooks/stockadjustments/actions";
-import { useCreatePOSSale, useFetchPOSSales, useVoidPOSSale } from "@/hooks/possales/actions";
+import { useFetchPOSSales, useVoidPOSSale } from "@/hooks/possales/actions";
+import { useFetchCurrentShift } from "@/hooks/posshifts/actions";
 import { useFetchAccount } from "@/hooks/accounts/actions";
+import { useLookupCustomer, useCreateWalkInCustomer } from "@/hooks/walkincustomers/actions";
 import { InventoryItem } from "@/services/stockadjustments";
 import { POSSale, CreatePOSSaleItem } from "@/services/possales";
 import SectionHeader from "@/components/dashboard/SectionHeader";
@@ -26,8 +28,12 @@ import {
   Clock,
   User,
   Info,
+  LogOut,
+  Gift,
 } from "lucide-react";
 import Link from "next/link";
+import { OpenShiftModal, CloseShiftModal } from "./ShiftModals";
+import { CheckoutModal } from "@/components/vendor/pos/CheckoutModal";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -229,21 +235,40 @@ export default function POSPage() {
   const { data: user } = useFetchAccount();
   const currency = user?.shop?.currency || "KES";
 
+  const { data: currentShift, isLoading: shiftLoading } = useFetchCurrentShift();
   const { data: inventory = [], isLoading: inventoryLoading } = useFetchInventory();
   const { data: recentSales = [] } = useFetchPOSSales();
-  const createSaleMutation = useCreatePOSSale();
   const voidMutation = useVoidPOSSale();
+  const createCustomerMutation = useCreateWalkInCustomer();
 
-  // Cart
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
 
-  // Checkout form
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "MPESA_MANUAL" | "CARD">("CASH");
-  const [mpesaRef, setMpesaRef] = useState("");
+  // Customer data
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [notes, setNotes] = useState("");
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
+  
+  // Customer lookup
+  const [debouncedPhone, setDebouncedPhone] = useState("");
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedPhone(customerPhone);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [customerPhone]);
+  
+  const { data: foundCustomer, isLoading: customerLoading } = useLookupCustomer(debouncedPhone);
+
+  useEffect(() => {
+    if (foundCustomer) {
+      setCustomerName(`${foundCustomer.first_name} ${foundCustomer.last_name || ""}`.trim());
+    }
+  }, [foundCustomer]);
+
+  // Modal states
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
 
   // UI state
   const [successRef, setSuccessRef] = useState<string | null>(null);
@@ -323,45 +348,23 @@ export default function POSPage() {
     setCart([]);
     setSuccessRef(null);
     setErrorMsg(null);
-    setMpesaRef("");
     setCustomerName("");
     setCustomerPhone("");
-    setNotes("");
+    setPointsToRedeem(0);
   };
 
-  // Checkout
-  const handleCharge = async () => {
-    setErrorMsg(null);
-    if (!cart.length) return;
-    if (paymentMethod === "MPESA_MANUAL" && !mpesaRef.trim()) {
-      setErrorMsg("Please enter the M-Pesa transaction reference.");
-      return;
-    }
-
-    const items: CreatePOSSaleItem[] = cart.map((c) => ({
-      variant: c.variant.variant_id,
-      quantity: c.quantity,
-    }));
-
-    try {
-      const sale = await createSaleMutation.mutateAsync({
-        items,
-        payment_method: paymentMethod,
-        mpesa_reference: paymentMethod === "MPESA_MANUAL" ? mpesaRef : undefined,
-        customer_name: customerName || undefined,
-        customer_phone: customerPhone || undefined,
-        notes: notes || undefined,
-      });
-      setSuccessRef(sale.reference);
-      setCart([]);
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.detail ||
-        err?.response?.data?.non_field_errors?.[0] ||
-        "Sale failed. Please try again.";
-      setErrorMsg(msg);
-    }
+  const handleCheckoutSuccess = (ref: string) => {
+    setIsCheckoutModalOpen(false);
+    setSuccessRef(ref);
+    setCart([]);
+    setCustomerName("");
+    setCustomerPhone("");
+    setPointsToRedeem(0);
   };
+
+  if (shiftLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#F5F5F7]"><Loader2 className="w-8 h-8 animate-spin text-[#0071E3]" /></div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] pb-12">
@@ -369,15 +372,26 @@ export default function POSPage() {
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <SectionHeader
             title="POS Register"
-            description="Log walk-in sales and manage in-store transactions."
+            description={currentShift ? `Till: ${currentShift.till.name} • Opened: ${new Date(currentShift.opening_time).toLocaleTimeString()}` : "Log walk-in sales and manage in-store transactions."}
           />
-          <Link
-            href="/vendor/pos/info"
-            className="flex items-center gap-2 text-sm text-[#0071E3] hover:underline font-medium"
-          >
-            <Info className="w-4 h-4" />
-            How to use POS
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/vendor/pos/info"
+              className="flex items-center gap-2 text-sm text-[#0071E3] hover:underline font-medium"
+            >
+              <Info className="w-4 h-4" />
+              Help
+            </Link>
+            {currentShift && (
+              <button
+                onClick={() => setIsCloseShiftModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-100 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Close Shift
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -502,80 +516,76 @@ export default function POSPage() {
               )}
             </div>
 
-            {/* Payment Panel */}
-            {cart.length > 0 && (
-              <div className="bg-white rounded-2xl border border-[#D2D2D7] p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-[#1D1D1F]">Payment</h3>
-
-                {/* Payment method */}
-                <div className="grid grid-cols-3 gap-2">
-                  {PAYMENT_METHODS.map(({ value, label, icon: Icon }) => (
-                    <button
-                      key={value}
-                      onClick={() => setPaymentMethod(value)}
-                      className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border text-xs font-medium transition-all ${
-                        paymentMethod === value
-                          ? "border-[#0071E3] bg-[#0071E3]/5 text-[#0071E3]"
-                          : "border-[#D2D2D7] text-[#6E6E73] hover:border-[#0071E3]/40"
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* M-Pesa ref */}
-                {paymentMethod === "MPESA_MANUAL" && (
-                  <input
-                    type="text"
-                    placeholder="M-Pesa transaction ref (e.g. RKQ1234XYZ)"
-                    value={mpesaRef}
-                    onChange={(e) => setMpesaRef(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
-                  />
-                )}
-
-                {/* Optional customer info */}
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    placeholder="Customer name (optional)"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Phone (optional)"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
-                  />
-                </div>
-
+            {/* Customer Info Panel */}
+            <div className="bg-white rounded-2xl border border-[#D2D2D7] p-5 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2">
+                  <User className="w-4 h-4 text-[#0071E3]" /> Customer & Loyalty
+                </h3>
+                {customerLoading && <Loader2 className="w-4 h-4 animate-spin text-[#0071E3]" />}
+              </div>
+              <div className="grid grid-cols-1 gap-3">
                 <input
-                  type="text"
-                  placeholder="Notes (optional)"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  type="tel"
+                  placeholder="Phone Number (Lookup)"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
                   className="w-full px-3 py-2.5 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
                 />
-
-                {/* Charge Button */}
-                <button
-                  onClick={handleCharge}
-                  disabled={createSaleMutation.isPending}
-                  className="w-full py-3 bg-[#0071E3] text-white rounded-xl text-sm font-semibold hover:bg-[#0077ED] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {createSaleMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4" />
-                  )}
-                  Charge {formatKES(cartTotal, currency)}
-                </button>
+                <input
+                  type="text"
+                  placeholder="Customer Name"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
+                />
               </div>
+
+              {foundCustomer ? (
+                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-emerald-800">Loyalty Member</p>
+                    <p className="text-sm font-bold text-emerald-700 flex items-center gap-1">
+                      <Gift className="w-3.5 h-3.5" /> {foundCustomer.loyalty_points.toFixed(0)} pts
+                    </p>
+                  </div>
+                  {foundCustomer.loyalty_points > 0 && cartTotal > 0 && pointsToRedeem === 0 && (
+                    <button
+                      onClick={() => setPointsToRedeem(Math.min(foundCustomer.loyalty_points, cartTotal))}
+                      className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors"
+                    >
+                      Redeem
+                    </button>
+                  )}
+                  {pointsToRedeem > 0 && (
+                    <button
+                      onClick={() => setPointsToRedeem(0)}
+                      className="px-3 py-1.5 bg-red-100 text-red-600 text-xs font-bold rounded-lg hover:bg-red-200 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ) : debouncedPhone.length >= 9 && customerName ? (
+                <button
+                  onClick={() => createCustomerMutation.mutate({ phone_number: debouncedPhone, first_name: customerName })}
+                  disabled={createCustomerMutation.isPending}
+                  className="w-full py-2 bg-[#F5F5F7] text-[#0071E3] rounded-xl text-xs font-bold hover:bg-[#E8E8ED] transition-colors"
+                >
+                  {createCustomerMutation.isPending ? "Enrolling..." : "Enroll in Loyalty Program"}
+                </button>
+              ) : null}
+            </div>
+
+            {/* Action Buttons */}
+            {cart.length > 0 && (
+              <button
+                onClick={() => setIsCheckoutModalOpen(true)}
+                className="w-full py-4 bg-[#0071E3] text-white rounded-2xl text-base font-bold hover:bg-[#0077ED] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                Checkout • {formatKES(cartTotal, currency)}
+                <ChevronRight className="w-5 h-5" />
+              </button>
             )}
 
             {/* Today's Sales */}
@@ -606,6 +616,20 @@ export default function POSPage() {
           </div>
         </div>
       </div>
+
+      {!currentShift && !shiftLoading && <OpenShiftModal currency={currency} />}
+      {isCloseShiftModalOpen && <CloseShiftModal currency={currency} onClose={() => setIsCloseShiftModalOpen(false)} />}
+      
+      {isCheckoutModalOpen && (
+        <CheckoutModal
+          cart={cart}
+          cartTotal={cartTotal}
+          currency={currency}
+          customerData={{ name: customerName, phone: customerPhone, pointsToRedeem }}
+          onClose={() => setIsCheckoutModalOpen(false)}
+          onSuccess={handleCheckoutSuccess}
+        />
+      )}
     </div>
   );
 }

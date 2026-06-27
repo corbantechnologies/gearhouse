@@ -17,6 +17,7 @@ import {
   Truck,
   ScanLine,
   Boxes,
+  Users,
 } from "lucide-react";
 
 export default function VendorNavbar() {
@@ -24,16 +25,24 @@ export default function VendorNavbar() {
   const { data: vendor } = useFetchAccount();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navLinks = [
+  const allNavLinks = [
     { name: "Dashboard", href: "/vendor/dashboard", icon: LayoutDashboard },
     { name: "Products", href: "/vendor/products", icon: ShoppingBag },
     { name: "Logistics", href: "/vendor/logistics", icon: Truck },
     { name: "Shop Orders", href: "/vendor/shop-orders", icon: LucideShoppingBasket },
+    { name: "Purchase Orders", href: "/vendor/purchase-orders", icon: Boxes }, // We will build this next
     { name: "POS Register", href: "/vendor/pos", icon: ScanLine },
+    { name: "Customers", href: "/vendor/customers", icon: Users },
     { name: "Inventory", href: "/vendor/inventory", icon: Boxes },
     { name: "Analytics", href: "/vendor/analytics", icon: BarChart3 },
     { name: "Settings", href: "/vendor/settings", icon: Settings },
   ];
+
+  const isStrictlyPOSStaff = vendor?.is_pos_staff && !vendor?.is_vendor && !vendor?.is_superuser;
+
+  const navLinks = isStrictlyPOSStaff
+    ? allNavLinks.filter(link => ["POS Register", "Customers", "Inventory"].includes(link.name))
+    : allNavLinks;
 
   return (
     <nav className="bg-white border-b border-[#D2D2D7] sticky top-0 z-50">
@@ -80,6 +89,7 @@ export default function VendorNavbar() {
               </p>
               <p className="text-[10px] text-[#86868B] mt-0.5 truncate max-w-[140px]">
                 {vendor?.email}
+                {isStrictlyPOSStaff && " (POS)"}
               </p>
             </div>
             <div className="w-8 h-8 bg-[#0071E3] rounded-full flex items-center justify-center text-white text-xs font-bold">
@@ -136,7 +146,10 @@ export default function VendorNavbar() {
                 <p className="text-sm font-semibold text-[#1D1D1F]">
                   {vendor?.first_name} {vendor?.last_name}
                 </p>
-                <p className="text-xs text-[#86868B]">{vendor?.email}</p>
+                <p className="text-xs text-[#86868B]">
+                  {vendor?.email}
+                  {isStrictlyPOSStaff && " (POS Staff)"}
+                </p>
               </div>
             </div>
             <button

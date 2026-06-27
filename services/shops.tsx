@@ -27,6 +27,8 @@ export interface Shop {
   return_policy: string;
   shipping_policy: string;
   refund_policy: string;
+  tax_rate: string;
+  loyalty_points_per_unit: number;
   categories: Category[];
 }
 
@@ -46,6 +48,8 @@ export interface updateShop {
   return_policy: string;
   shipping_policy: string;
   refund_policy: string;
+  tax_rate?: string;
+  loyalty_points_per_unit?: number;
 }
 
 export const getShops = async (): Promise<Shop[]> => {

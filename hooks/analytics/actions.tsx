@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getKPI, getSales, AnalyticsParams } from "@/services/analytics";
+import { getKPI, getSales, getCashierPerformance, AnalyticsParams } from "@/services/analytics";
 import useAxiosAuth from "../authentication/useAxiosAuth";
 
 export const useKPI = (params?: AnalyticsParams) => {
@@ -17,5 +17,13 @@ export const useSales = (params?: AnalyticsParams) => {
   return useQuery({
     queryKey: ["sales", params],
     queryFn: () => getSales(headers, params),
+  });
+};
+
+export const useCashierPerformance = (params?: AnalyticsParams) => {
+  const headers = useAxiosAuth();
+  return useQuery({
+    queryKey: ["cashierPerformance", params],
+    queryFn: () => getCashierPerformance(headers, params),
   });
 };
