@@ -5,7 +5,7 @@ import { useFetchInventory } from "@/hooks/stockadjustments/actions";
 import { useFetchPOSSales } from "@/hooks/possales/actions";
 import { useFetchCurrentShift } from "@/hooks/posshifts/actions";
 import { useFetchAccount } from "@/hooks/accounts/actions";
-import { useLookupCustomer } from "@/hooks/walkincustomers/actions";
+import { useFetchWalkInCustomers, useLookupCustomer } from "@/hooks/walkincustomers/actions";
 import { voidPOSSale } from "@/services/possales";
 import { createWalkInCustomer } from "@/services/walkincustomers";
 import { useQueryClient } from "@tanstack/react-query";
@@ -263,9 +263,10 @@ export default function POSPage() {
   const handleEnrollCustomer = async () => {
     setIsEnrolling(true);
     try {
-      await createWalkInCustomer({ phone: debouncedPhone, name: customerName }, header);
-      queryClient.invalidateQueries({ queryKey: ["walkincustomer", debouncedPhone] });
+      const newCustomer = await createWalkInCustomer({ phone: customerPhone, name: customerName }, header);
       queryClient.invalidateQueries({ queryKey: ["walkincustomers"] });
+      handleSelectCustomer(newCustomer);
+      toast.success("Customer enrolled successfully!");
     } catch (err: any) {
       toast.error("Failed to enroll customer.");
     } finally {
@@ -276,27 +277,40 @@ export default function POSPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
 
-  // Customer data
+  // Autocomplete customer lookup
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedCustomerSearch(customerSearch);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [customerSearch]);
+
+  const { data: searchedCustomers = [], isLoading: customerSearchLoading } = useFetchWalkInCustomers(debouncedCustomerSearch);
+
+  const handleSelectCustomer = (customer: any) => {
+    setSelectedCustomer(customer);
+    setCustomerName(customer.name || "");
+    setCustomerPhone(customer.phone || "");
+    setCustomerSearch("");
+    setIsDropdownOpen(false);
+  };
+
+  const clearSelectedCustomer = () => {
+    setSelectedCustomer(null);
+    setCustomerName("");
+    setCustomerPhone("");
+    setPointsToRedeem(0);
+  };
+
+  // Customer data for creation
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
-  
-  // Customer lookup
-  const [debouncedPhone, setDebouncedPhone] = useState("");
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedPhone(customerPhone);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [customerPhone]);
-  
-  const { data: foundCustomer, isLoading: customerLoading } = useLookupCustomer(debouncedPhone);
-
-  useEffect(() => {
-    if (foundCustomer) {
-      setCustomerName(foundCustomer.name);
-    }
-  }, [foundCustomer]);
 
   // Modal states
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
@@ -389,18 +403,14 @@ export default function POSPage() {
     setCart([]);
     setSuccessRef(null);
     setErrorMsg(null);
-    setCustomerName("");
-    setCustomerPhone("");
-    setPointsToRedeem(0);
+    clearSelectedCustomer();
   };
 
   const handleCheckoutSuccess = (ref: string) => {
     setIsCheckoutModalOpen(false);
     setSuccessRef(ref);
     setCart([]);
-    setCustomerName("");
-    setCustomerPhone("");
-    setPointsToRedeem(0);
+    clearSelectedCustomer();
   };
 
   if (shiftLoading) {
@@ -568,63 +578,109 @@ export default function POSPage() {
 
             {/* Customer Info Panel */}
             <div className="bg-white rounded-2xl border border-[#D2D2D7] p-5 space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center relative">
                 <h3 className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2">
                   <User className="w-4 h-4 text-[#0071E3]" /> Customer & Loyalty
                 </h3>
-                {customerLoading && <Loader2 className="w-4 h-4 animate-spin text-[#0071E3]" />}
-              </div>
-              <div className="grid grid-cols-1 gap-3">
-                <input
-                  type="tel"
-                  placeholder="Phone Number (Lookup)"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
-                />
-                <input
-                  type="text"
-                  placeholder="Customer Name"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
-                />
               </div>
 
-              {foundCustomer ? (
+              {!selectedCustomer ? (
+                <>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search Customer (Phone or Name)..."
+                      value={customerSearch}
+                      onChange={(e) => {
+                        setCustomerSearch(e.target.value);
+                        setIsDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsDropdownOpen(true)}
+                      onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
+                      className="w-full px-3 py-2.5 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
+                    />
+                    {isDropdownOpen && customerSearch.length > 1 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#D2D2D7] rounded-xl shadow-lg max-h-48 overflow-y-auto z-10">
+                        {customerSearchLoading ? (
+                          <div className="p-3 text-center text-sm text-[#86868B]">Searching...</div>
+                        ) : searchedCustomers.length > 0 ? (
+                          searchedCustomers.map((c: any) => (
+                            <button
+                              key={c.id}
+                              onClick={() => handleSelectCustomer(c)}
+                              className="w-full text-left px-4 py-2.5 hover:bg-[#F5F5F7] border-b border-[#F5F5F7] last:border-b-0 transition-colors"
+                            >
+                              <p className="text-sm font-semibold text-[#1D1D1F]">{c.name}</p>
+                              <p className="text-xs text-[#86868B]">{c.phone}</p>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-3 text-center text-sm text-[#86868B]">No customer found.</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-3 mt-2 border-t border-[#F5F5F7] pt-4">
+                    <p className="text-xs font-semibold text-[#86868B] uppercase">Or Add New Customer</p>
+                    <input
+                      type="text"
+                      placeholder="Customer Name"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
+                    />
+                    <input
+                      type="tel"
+                      placeholder="Phone Number"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all"
+                    />
+                    {customerName && customerPhone.length >= 9 && (
+                      <button
+                        onClick={handleEnrollCustomer}
+                        disabled={isEnrolling}
+                        className="w-full py-2 bg-[#F5F5F7] text-[#0071E3] rounded-xl text-xs font-bold hover:bg-[#E8E8ED] transition-colors"
+                      >
+                        {isEnrolling ? "Enrolling..." : "Enroll in Loyalty Program"}
+                      </button>
+                    )}
+                  </div>
+                </>
+              ) : (
                 <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-emerald-800">Loyalty Member</p>
+                    <p className="text-xs font-semibold text-emerald-800">{selectedCustomer.name}</p>
                     <p className="text-sm font-bold text-emerald-700 flex items-center gap-1">
-                      <Gift className="w-3.5 h-3.5" /> {foundCustomer.loyalty_points.toFixed(0)} pts
+                      <Gift className="w-3.5 h-3.5" /> {(selectedCustomer.loyalty_points || 0).toFixed(0)} pts
                     </p>
                   </div>
-                  {foundCustomer.loyalty_points > 0 && cartTotal > 0 && pointsToRedeem === 0 && (
-                    <button
-                      onClick={() => setPointsToRedeem(Math.min(foundCustomer.loyalty_points, cartTotal))}
-                      className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors"
-                    >
-                      Redeem
+                  <div className="flex flex-col gap-2 items-end">
+                    <button onClick={clearSelectedCustomer} className="text-xs text-emerald-800 hover:text-emerald-900 underline">
+                      Change Customer
                     </button>
-                  )}
-                  {pointsToRedeem > 0 && (
-                    <button
-                      onClick={() => setPointsToRedeem(0)}
-                      className="px-3 py-1.5 bg-red-100 text-red-600 text-xs font-bold rounded-lg hover:bg-red-200 transition-colors"
-                    >
-                      Remove
-                    </button>
-                  )}
+                    <div className="flex gap-2">
+                      {(selectedCustomer.loyalty_points || 0) > 0 && cartTotal > 0 && pointsToRedeem === 0 && (
+                        <button
+                          onClick={() => setPointsToRedeem(Math.min((selectedCustomer.loyalty_points || 0), cartTotal))}
+                          className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors"
+                        >
+                          Redeem
+                        </button>
+                      )}
+                      {pointsToRedeem > 0 && (
+                        <button
+                          onClick={() => setPointsToRedeem(0)}
+                          className="px-3 py-1.5 bg-red-100 text-red-600 text-xs font-bold rounded-lg hover:bg-red-200 transition-colors"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              ) : debouncedPhone.length >= 9 && customerName ? (
-                <button
-                  onClick={handleEnrollCustomer}
-                  disabled={isEnrolling}
-                  className="w-full py-2 bg-[#F5F5F7] text-[#0071E3] rounded-xl text-xs font-bold hover:bg-[#E8E8ED] transition-colors"
-                >
-                  {isEnrolling ? "Enrolling..." : "Enroll in Loyalty Program"}
-                </button>
-              ) : null}
+              )}
             </div>
 
             {/* Action Buttons */}
