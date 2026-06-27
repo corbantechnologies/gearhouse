@@ -2,7 +2,7 @@
 import React from "react";
 import toast from "react-hot-toast";
 import { useFetchPOSTills } from "@/hooks/postills/actions";
-import { Loader2, Monitor, DollarSign, AlertCircle } from "lucide-react";
+import { Loader2, Monitor, DollarSign, AlertCircle, X } from "lucide-react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,14 +12,17 @@ import { useSession } from "next-auth/react";
 
 export const OpenShiftModal = ({
   currency,
+  onClose,
 }: {
   currency: string;
+  onClose: () => void;
 }) => {
   const { data: tills = [], isLoading: isTillsLoading } = useFetchPOSTills();
   const queryClient = useQueryClient();
   const axios = useAxiosAuth();
 
   const activeTills = tills.filter((t: any) => t.is_active);
+  const allTillsOccupied = activeTills.length > 0 && activeTills.every((t: any) => t.is_in_use);
 
   const formik = useFormik({
     initialValues: {
@@ -49,7 +52,11 @@ export const OpenShiftModal = ({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-8">
+        <div className="p-8 relative">
+          <button onClick={onClose} className="absolute right-6 top-6 p-2 rounded-xl hover:bg-[#F5F5F7] text-[#86868B] transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+          
           <div className="w-12 h-12 bg-[#0071E3]/10 text-[#0071E3] rounded-2xl flex items-center justify-center mb-6">
             <Monitor className="w-6 h-6" />
           </div>
@@ -69,6 +76,11 @@ export const OpenShiftModal = ({
                 <div className="p-4 bg-amber-50 text-amber-800 rounded-xl text-sm flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <p>No active tills found. Please ask an administrator to create one in POS Settings.</p>
+                </div>
+              ) : allTillsOccupied ? (
+                <div className="p-4 bg-amber-50 text-amber-800 rounded-xl text-sm flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <p>All tills are currently occupied. Please wait for a till to become available.</p>
                 </div>
               ) : (
                 <>
@@ -115,7 +127,7 @@ export const OpenShiftModal = ({
 
             <button
               type="submit"
-              disabled={formik.isSubmitting || activeTills.length === 0}
+              disabled={formik.isSubmitting || activeTills.length === 0 || allTillsOccupied}
               className="w-full h-12 mt-4 bg-[#0071E3] text-white rounded-xl text-sm font-bold hover:bg-[#0077ED] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {formik.isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -137,7 +149,7 @@ export const CloseShiftModal = ({
 }) => {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
-  const token = session?.user?.token;
+  const token = useAxiosAuth()
 
   const formik = useFormik({
     initialValues: {

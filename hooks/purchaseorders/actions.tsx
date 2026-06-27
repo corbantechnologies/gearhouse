@@ -1,17 +1,16 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
 import { getPurchaseOrders } from "@/services/purchaseorders";
+import useAxiosAuth from "../authentication/useAxiosAuth";
 
 export const useFetchPurchaseOrders = () => {
-  const { data: session } = useSession();
-  const token = session?.user?.token;
+  const headers = useAxiosAuth()
 
   return useQuery({
     queryKey: ["purchaseorders"],
-    queryFn: () => getPurchaseOrders({ headers: { Authorization: `Bearer ${token}` } }),
-    enabled: !!token,
+    queryFn: () => getPurchaseOrders(headers),
+    enabled: !!headers,
   });
 };
 

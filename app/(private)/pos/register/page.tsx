@@ -301,6 +301,15 @@ export default function POSPage() {
   // Modal states
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
+  const [isOpenShiftModalOpen, setIsOpenShiftModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!shiftLoading && !currentShift) {
+      setIsOpenShiftModalOpen(true);
+    } else {
+      setIsOpenShiftModalOpen(false);
+    }
+  }, [currentShift, shiftLoading]);
 
   // UI state
   const [successRef, setSuccessRef] = useState<string | null>(null);
@@ -414,6 +423,15 @@ export default function POSPage() {
               <Info className="w-4 h-4" />
               Help
             </Link>
+            {!currentShift && !shiftLoading && (
+              <button
+                onClick={() => setIsOpenShiftModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#0071E3] text-white rounded-xl text-sm font-semibold hover:bg-[#0077ED] transition-colors"
+              >
+                <ScanLine className="w-4 h-4" />
+                Open Shift
+              </button>
+            )}
             {currentShift && (
               <button
                 onClick={() => setIsCloseShiftModalOpen(true)}
@@ -649,7 +667,12 @@ export default function POSPage() {
         </div>
       </div>
 
-      {!currentShift && !shiftLoading && <OpenShiftModal currency={currency} />}
+      {isOpenShiftModalOpen && !currentShift && !shiftLoading && (
+        <OpenShiftModal
+          currency={currency}
+          onClose={() => setIsOpenShiftModalOpen(false)}
+        />
+      )}
       {isCloseShiftModalOpen && <CloseShiftModal currency={currency} onClose={() => setIsCloseShiftModalOpen(false)} />}
       
       {isCheckoutModalOpen && (

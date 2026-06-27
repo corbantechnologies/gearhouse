@@ -143,7 +143,7 @@ export const CheckoutModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="px-6 py-5 border-b border-[#F5F5F7] flex items-center justify-between">
           <h2 className="text-xl font-bold text-[#1D1D1F]">Checkout</h2>
