@@ -31,6 +31,7 @@ export default function VendorNavbar() {
     { name: "Logistics", href: "/vendor/logistics", icon: Truck },
     { name: "Shop Orders", href: "/vendor/shop-orders", icon: LucideShoppingBasket },
     { name: "Purchase Orders", href: "/vendor/purchase-orders", icon: Boxes },
+    { name: "POS Settings", href: "/pos/settings", icon: Settings },
     { name: "POS Register", href: "/pos/register", icon: ScanLine },
     { name: "Customers", href: "/pos/customers", icon: Users },
     { name: "Inventory", href: "/vendor/inventory", icon: Boxes },

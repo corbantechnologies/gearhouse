@@ -1,59 +1,73 @@
 "use client";
 
 import React, { useState } from "react";
-import { useFetchPOSTills, useCreatePOSTill, useUpdatePOSTill, useDeletePOSTill } from "@/hooks/postills/actions";
+import { useFetchPOSTills } from "@/hooks/postills/actions";
+import { createPOSTill, updatePOSTill, deletePOSTill } from "@/services/postills";
 import { Monitor, Plus, Edit, Trash2, CheckCircle2, XCircle } from "lucide-react";
 import VendorModal from "@/components/vendor/Modal";
 import toast from "react-hot-toast";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 
 export default function POSTillsSection() {
-  const { data: tills = [], isLoading } = useFetchPOSTills();
-  const createMutation = useCreatePOSTill();
-  const updateMutation = useUpdatePOSTill();
-  const deleteMutation = useDeletePOSTill();
+  const { data: tills, isLoading: isLoadingPOSTills, refetch: refetchPOSTills } = useFetchPOSTills();
+  const header = useAxiosAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ name: "", is_active: true });
+
+  const formik = useFormik({
+    initialValues: {
+      name: "",
+      is_active: true,
+    },
+    validationSchema: Yup.object({
+      name: Yup.string().required("Till Name is required"),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
+      const tId = toast.loading(editingId ? "Updating Till..." : "Creating Till...");
+      try {
+        if (editingId) {
+          await updatePOSTill(editingId, values, header);
+          toast.success("Till updated successfully", { id: tId });
+        } else {
+          await createPOSTill(values, header);
+          toast.success("Till created successfully", { id: tId });
+        }
+        refetchPOSTills();
+        setIsModalOpen(false);
+      } catch (error: any) {
+        console.error(error);
+        const msg = error?.response?.data?.name?.[0] || error?.response?.data?.detail || "An error occurred";
+        toast.error(msg, { id: tId });
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
 
   const handleOpenModal = (till: any = null) => {
     if (till) {
       setEditingId(till.id);
-      setFormData({ name: till.name, is_active: till.is_active });
+      formik.setValues({ name: till.name, is_active: till.is_active });
     } else {
       setEditingId(null);
-      setFormData({ name: "", is_active: true });
+      formik.resetForm();
     }
     setIsModalOpen(true);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const tId = toast.loading(editingId ? "Updating Till..." : "Creating Till...");
-    try {
-      if (editingId) {
-        await updateMutation.mutateAsync({ id: editingId, data: formData });
-        toast.success("Till updated successfully", { id: tId });
-      } else {
-        await createMutation.mutateAsync({ name: formData.name });
-        toast.success("Till created successfully", { id: tId });
-      }
-      setIsModalOpen(false);
-    } catch (error: any) {
-      console.error(error);
-      const msg = error?.response?.data?.name?.[0] || error?.response?.data?.detail || "An error occurred";
-      toast.error(msg, { id: tId });
-    }
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this Till?")) {
       const tId = toast.loading("Deleting Till...");
       try {
-        await deleteMutation.mutateAsync(id);
+        await deletePOSTill(id, header);
         toast.success("Till deleted successfully", { id: tId });
+        refetchPOSTills();
       } catch (error: any) {
-        toast.error(error?.response?.data?.detail || "Failed to delete till", { id: tId });
+        const msg = error?.response?.data?.name?.[0] || error?.response?.data?.detail || "An error occurred";
+        toast.error(msg, { id: tId });
       }
     }
   };
@@ -75,16 +89,16 @@ export default function POSTillsSection() {
       </div>
 
       <div className="p-4 md:p-8">
-        {isLoading ? (
+        {isLoadingPOSTills ? (
           <div className="space-y-3 animate-pulse">
             <div className="h-10 bg-[#F5F5F7] rounded-xl w-full"></div>
             <div className="h-10 bg-[#F5F5F7] rounded-xl w-full"></div>
           </div>
-        ) : tills.length === 0 ? (
+        ) : tills?.length === 0 ? (
           <p className="text-sm text-[#86868B] text-center py-6">No POS Tills configured yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tills.map((till) => (
+            {tills?.map((till: any) => (
               <div key={till.id} className="border border-[#F5F5F7] rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-shadow">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-semibold text-[#1D1D1F]">{till.name}</h4>
@@ -118,27 +132,30 @@ export default function POSTillsSection() {
         title={editingId ? "Update Till" : "Create New Till"}
         maxWidth="max-w-md"
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={formik.handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-1">
               Till Name
             </label>
             <input
               type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              {...formik.getFieldProps("name")}
               placeholder="e.g. Front Desk Till 1"
-              className="w-full h-11 px-4 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
+              className={`w-full h-11 px-4 bg-[#F5F5F7] border rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
+                formik.touched.name && formik.errors.name ? "border-red-500" : "border-transparent"
+              }`}
             />
+            {formik.touched.name && formik.errors.name && (
+              <p className="text-xs text-red-500 mt-1.5">{formik.errors.name as string}</p>
+            )}
           </div>
           
           {editingId && (
             <label className="flex items-center gap-2 text-sm text-[#1D1D1F] font-medium cursor-pointer">
               <input
                 type="checkbox"
-                checked={formData.is_active}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                {...formik.getFieldProps("is_active")}
+                checked={formik.values.is_active}
                 className="w-4 h-4 rounded text-[#0071E3] focus:ring-[#0071E3]"
               />
               Till is Active
@@ -148,10 +165,10 @@ export default function POSTillsSection() {
           <div className="pt-2">
             <button
               type="submit"
-              disabled={createMutation.isPending || updateMutation.isPending}
+              disabled={formik.isSubmitting}
               className="w-full h-11 bg-[#0071E3] text-white font-semibold rounded-xl text-sm hover:bg-[#0077ED] transition-colors disabled:opacity-50"
             >
-              {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Till"}
+              {formik.isSubmitting ? "Saving..." : "Save Till"}
             </button>
           </div>
         </form>

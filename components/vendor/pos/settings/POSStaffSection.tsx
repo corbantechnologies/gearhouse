@@ -1,31 +1,78 @@
 "use client";
 
 import React, { useState } from "react";
-import { useFetchPOSStaffList, useCreatePOSStaff, useUpdatePOSStaff, useDeactivatePOSStaff } from "@/hooks/accounts/actions";
+import { useFetchPOSStaffList } from "@/hooks/accounts/actions";
+import { createPOSStaff, updatePOSStaff, deactivatePOSStaff } from "@/services/accounts";
 import { Users, Plus, Edit, Trash2, ShieldAlert } from "lucide-react";
 import VendorModal from "@/components/vendor/Modal";
 import toast from "react-hot-toast";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { useQueryClient } from "@tanstack/react-query";
+import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 
 export default function POSStaffSection() {
   const { data: staffList = [], isLoading } = useFetchPOSStaffList();
-  const createMutation = useCreatePOSStaff();
-  const updateMutation = useUpdatePOSStaff();
-  const deactivateMutation = useDeactivatePOSStaff();
+  const queryClient = useQueryClient();
+  const header = useAxiosAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    email: "",
-    first_name: "",
-    last_name: "",
-    phone_number: "",
-    is_active: true,
+
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      first_name: "",
+      last_name: "",
+      phone_number: "",
+      is_active: true,
+    },
+    validationSchema: Yup.object({
+      email: editingId 
+        ? Yup.string() 
+        : Yup.string().email("Invalid email").required("Email is required"),
+      first_name: Yup.string().required("First name is required"),
+      last_name: Yup.string().required("Last name is required"),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
+      const tId = toast.loading(editingId ? "Updating staff..." : "Creating staff account...");
+      try {
+        if (editingId) {
+          await updatePOSStaff(editingId, {
+            first_name: values.first_name,
+            last_name: values.last_name,
+            phone_number: values.phone_number,
+            is_active: values.is_active,
+          }, header);
+          toast.success("Staff updated successfully", { id: tId });
+        } else {
+          await createPOSStaff({
+            email: values.email,
+            first_name: values.first_name,
+            last_name: values.last_name,
+            phone_number: values.phone_number,
+          }, header);
+          toast.success("Staff account created successfully", { id: tId });
+        }
+        queryClient.invalidateQueries({ queryKey: ["posStaffList"] });
+        if (editingId) {
+          queryClient.invalidateQueries({ queryKey: ["posStaff", editingId] });
+        }
+        setIsModalOpen(false);
+      } catch (error: any) {
+        console.error(error);
+        const msg = error?.response?.data?.email?.[0] || error?.response?.data?.detail || "Failed to save staff account";
+        toast.error(msg, { id: tId });
+      } finally {
+        setSubmitting(false);
+      }
+    },
   });
 
   const handleOpenModal = (staff: any = null) => {
     if (staff) {
       setEditingId(staff.usercode);
-      setFormData({
+      formik.setValues({
         email: staff.email,
         first_name: staff.first_name,
         last_name: staff.last_name,
@@ -34,55 +81,18 @@ export default function POSStaffSection() {
       });
     } else {
       setEditingId(null);
-      setFormData({
-        email: "",
-        first_name: "",
-        last_name: "",
-        phone_number: "",
-        is_active: true,
-      });
+      formik.resetForm();
     }
     setIsModalOpen(true);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const tId = toast.loading(editingId ? "Updating staff..." : "Creating staff account...");
-    try {
-      if (editingId) {
-        await updateMutation.mutateAsync({
-          staffUsercode: editingId,
-          data: {
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            phone_number: formData.phone_number,
-            is_active: formData.is_active,
-          },
-        });
-        toast.success("Staff updated successfully", { id: tId });
-      } else {
-        await createMutation.mutateAsync({
-          email: formData.email,
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          phone_number: formData.phone_number,
-        });
-        toast.success("Staff account created successfully", { id: tId });
-      }
-      setIsModalOpen(false);
-    } catch (error: any) {
-      console.error(error);
-      const msg = error?.response?.data?.email?.[0] || error?.response?.data?.detail || "Failed to save staff account";
-      toast.error(msg, { id: tId });
-    }
   };
 
   const handleDeactivate = async (usercode: string) => {
     if (window.confirm("Are you sure you want to deactivate this cashier? They will no longer be able to log in or process sales.")) {
       const tId = toast.loading("Deactivating...");
       try {
-        await deactivateMutation.mutateAsync(usercode);
+        await deactivatePOSStaff(usercode, header);
         toast.success("Staff deactivated successfully", { id: tId });
+        queryClient.invalidateQueries({ queryKey: ["posStaffList"] });
       } catch (error: any) {
         toast.error(error?.response?.data?.detail || "Failed to deactivate", { id: tId });
       }
@@ -115,7 +125,7 @@ export default function POSStaffSection() {
           <p className="text-sm text-[#86868B] text-center py-6">No POS Staff accounts created yet.</p>
         ) : (
           <div className="space-y-3">
-            {staffList.map((staff) => (
+            {staffList.map((staff: any) => (
               <div key={staff.usercode} className="border border-[#F5F5F7] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#FAFAFA] transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-[#0071E3]/10 text-[#0071E3] rounded-full flex items-center justify-center font-bold text-sm">
@@ -156,7 +166,7 @@ export default function POSStaffSection() {
         title={editingId ? "Update POS Staff" : "Create POS Staff"}
         maxWidth="max-w-md"
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={formik.handleSubmit} className="space-y-4">
           {!editingId && (
             <div>
               <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-1">
@@ -164,11 +174,14 @@ export default function POSStaffSection() {
               </label>
               <input
                 type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full h-11 px-4 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
+                {...formik.getFieldProps("email")}
+                className={`w-full h-11 px-4 bg-[#F5F5F7] border rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
+                  formik.touched.email && formik.errors.email ? "border-red-500" : "border-transparent"
+                }`}
               />
+              {formik.touched.email && formik.errors.email && (
+                <p className="text-xs text-red-500 mt-1.5">{formik.errors.email as string}</p>
+              )}
             </div>
           )}
           
@@ -179,11 +192,14 @@ export default function POSStaffSection() {
               </label>
               <input
                 type="text"
-                required
-                value={formData.first_name}
-                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                className="w-full h-11 px-4 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
+                {...formik.getFieldProps("first_name")}
+                className={`w-full h-11 px-4 bg-[#F5F5F7] border rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
+                  formik.touched.first_name && formik.errors.first_name ? "border-red-500" : "border-transparent"
+                }`}
               />
+              {formik.touched.first_name && formik.errors.first_name && (
+                <p className="text-xs text-red-500 mt-1.5">{formik.errors.first_name as string}</p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#86868B] uppercase tracking-wider mb-1">
@@ -191,11 +207,14 @@ export default function POSStaffSection() {
               </label>
               <input
                 type="text"
-                required
-                value={formData.last_name}
-                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                className="w-full h-11 px-4 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
+                {...formik.getFieldProps("last_name")}
+                className={`w-full h-11 px-4 bg-[#F5F5F7] border rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none ${
+                  formik.touched.last_name && formik.errors.last_name ? "border-red-500" : "border-transparent"
+                }`}
               />
+              {formik.touched.last_name && formik.errors.last_name && (
+                <p className="text-xs text-red-500 mt-1.5">{formik.errors.last_name as string}</p>
+              )}
             </div>
           </div>
 
@@ -205,8 +224,7 @@ export default function POSStaffSection() {
             </label>
             <input
               type="text"
-              value={formData.phone_number}
-              onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+              {...formik.getFieldProps("phone_number")}
               className="w-full h-11 px-4 bg-[#F5F5F7] border border-transparent rounded-xl text-sm focus:bg-white focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-all outline-none"
             />
           </div>
@@ -215,8 +233,8 @@ export default function POSStaffSection() {
             <label className="flex items-center gap-2 text-sm text-[#1D1D1F] font-medium cursor-pointer">
               <input
                 type="checkbox"
-                checked={formData.is_active}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                {...formik.getFieldProps("is_active")}
+                checked={formik.values.is_active}
                 className="w-4 h-4 rounded text-[#0071E3] focus:ring-[#0071E3]"
               />
               Staff Account is Active
@@ -232,10 +250,10 @@ export default function POSStaffSection() {
           <div className="pt-2">
             <button
               type="submit"
-              disabled={createMutation.isPending || updateMutation.isPending}
+              disabled={formik.isSubmitting}
               className="w-full h-11 bg-[#0071E3] text-white font-semibold rounded-xl text-sm hover:bg-[#0077ED] transition-colors disabled:opacity-50"
             >
-              {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Staff"}
+              {formik.isSubmitting ? "Saving..." : "Save Staff"}
             </button>
           </div>
         </form>
