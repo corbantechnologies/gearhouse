@@ -45,6 +45,7 @@ import {
 import Link from "next/link";
 import { OpenShiftModal, CloseShiftModal } from "./ShiftModals";
 import { CheckoutModal } from "@/components/vendor/pos/CheckoutModal";
+import CreateBundleModal from "@/components/vendor/pos/CreateBundleModal";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -295,6 +296,7 @@ export default function POSPage() {
   const { data: inventory = [], isLoading: inventoryLoading } =
     useFetchInventory();
   const { data: bundles = [], isLoading: bundlesLoading } = useFetchPOSBundles(true);
+  const [isCreateBundleModalOpen, setIsCreateBundleModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"products" | "bundles">("products");
   const { data: recentSales = [] } = useFetchPOSSales();
   const queryClient = useQueryClient();
@@ -573,29 +575,41 @@ export default function POSPage() {
               />
             </div>
 
-            {/* Tabbed Navigation */}
-            <div className="flex items-center gap-2 bg-[#E3E3E8] p-1 rounded-xl w-fit">
-              <button
-                onClick={() => setActiveTab("products")}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                  activeTab === "products"
-                    ? "bg-white text-[#1D1D1F] shadow-sm"
-                    : "text-[#6E6E73] hover:text-[#1D1D1F]"
-                }`}
-              >
-                Products
-              </button>
-              <button
-                onClick={() => setActiveTab("bundles")}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${
-                  activeTab === "bundles"
-                    ? "bg-white text-[#1D1D1F] shadow-sm"
-                    : "text-[#6E6E73] hover:text-[#1D1D1F]"
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                Bundles
-              </button>
+            {/* Tabbed Navigation and Actions */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 bg-[#E3E3E8] p-1 rounded-xl w-fit">
+                <button
+                  onClick={() => setActiveTab("products")}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                    activeTab === "products"
+                      ? "bg-white text-[#1D1D1F] shadow-sm"
+                      : "text-[#6E6E73] hover:text-[#1D1D1F]"
+                  }`}
+                >
+                  Products
+                </button>
+                <button
+                  onClick={() => setActiveTab("bundles")}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                    activeTab === "bundles"
+                      ? "bg-white text-[#1D1D1F] shadow-sm"
+                      : "text-[#6E6E73] hover:text-[#1D1D1F]"
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  Bundles
+                </button>
+              </div>
+              
+              {activeTab === "bundles" && currentShift && (
+                <button
+                  onClick={() => setIsCreateBundleModalOpen(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[#0071E3]/10 text-[#0071E3] rounded-lg text-sm font-semibold hover:bg-[#0071E3]/20 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Bundle
+                </button>
+              )}
             </div>
 
             {/* Product Grid */}
@@ -982,6 +996,9 @@ export default function POSPage() {
           onClose={() => setIsCheckoutModalOpen(false)}
           onSuccess={handleCheckoutSuccess}
         />
+      )}
+      {isCreateBundleModalOpen && (
+        <CreateBundleModal onClose={() => setIsCreateBundleModalOpen(false)} />
       )}
     </div>
   );

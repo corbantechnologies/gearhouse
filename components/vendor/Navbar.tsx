@@ -83,12 +83,14 @@ export default function VendorNavbar() {
             <div className="flex items-center gap-3">
               {/* Brand */}
               <Link
-                href="/vendor/dashboard"
+                href={isStrictlyPOSStaff ? "/pos/register" : "/vendor/dashboard"}
                 className="flex items-center gap-2 flex-shrink-0 transition-opacity hover:opacity-90"
               >
                 <img src="/logo.svg" alt="GearHouse" className="h-7 w-auto" />
                 <div className="hidden sm:block border-l border-[#D2D2D7] ml-1 pl-2.5">
-                  <span className="text-xs text-[#86868B] font-semibold uppercase tracking-wider">Vendor Portal</span>
+                  <span className="text-xs text-[#86868B] font-semibold uppercase tracking-wider">
+                    {isStrictlyPOSStaff ? "POS Portal" : "Vendor Portal"}
+                  </span>
                 </div>
               </Link>
             </div>
