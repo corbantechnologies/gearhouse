@@ -17,6 +17,7 @@ import {
   Plus,
   Edit,
   Truck,
+  BarChart3,
 } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import SectionHeader from "@/components/dashboard/SectionHeader";
@@ -33,6 +34,7 @@ import CreateShippingZone from "@/forms/shippingzones/CreateShippingZone";
 import UpdateShippingZone from "@/forms/shippingzones/UpdateShippingZone";
 import UpdateShopForm from "@/forms/shop/UpdateShop";
 import { useFetchProductsVendor } from "@/hooks/products/actions";
+import AnalyticsTab from "@/components/vendor/dashboard/AnalyticsTab";
 
 // --- Main Page ---
 
@@ -96,6 +98,7 @@ export default function VendorDashboard() {
 
   const tabs = [
     { id: "overview", label: "Overview", icon: TrendingUp },
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "categories", label: "Categories", icon: LayoutGrid },
     { id: "subcategories", label: "Subcategories", icon: ListTree },
     { id: "pickup-stations", label: "Pickup Stations", icon: MapPin },
@@ -229,6 +232,8 @@ export default function VendorDashboard() {
               </div>
             </div>
           )}
+
+          {activeTab === "analytics" && <AnalyticsTab />}
 
           {activeTab === "categories" && (
             <div className="animate-in fade-in duration-500">
