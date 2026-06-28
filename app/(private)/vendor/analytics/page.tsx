@@ -290,7 +290,7 @@ const CashierPerformanceTable = ({
                 Avg. Sale Value
               </th>
               <th className="text-right px-5 py-3 text-xs font-semibold text-[#86868B] uppercase tracking-wider">
-                Shift Discrepancies
+                Total Discounts
               </th>
             </tr>
           </thead>
@@ -313,14 +313,8 @@ const CashierPerformanceTable = ({
                   <td className="px-4 py-3.5 text-right text-[#6E6E73]">
                     {formatCurrency(cashier.average_sale_value, currency)}
                   </td>
-                  <td className="px-5 py-3.5 text-right">
-                    {cashier.discrepancy_count > 0 ? (
-                      <span className="text-red-500 font-medium">
-                        {cashier.discrepancy_count} times
-                      </span>
-                    ) : (
-                      <span className="text-emerald-500 font-medium">0</span>
-                    )}
+                  <td className="px-5 py-3.5 text-right font-medium text-[#1D1D1F]">
+                    {formatCurrency(cashier.total_discount_given || 0, currency)}
                   </td>
                 </tr>
               ))}

@@ -35,7 +35,7 @@ export interface CashierPerformance {
   total_sales: number;
   total_revenue: number;
   average_sale_value: number;
-  discrepancy_count: number;
+  total_discount_given: number;
 }
 
 export interface AnalyticsParams {
@@ -50,11 +50,20 @@ export const getKPI = async (
   headers: { headers: { Authorization: string } },
   params?: AnalyticsParams,
 ): Promise<KPI> => {
-  const response: AxiosResponse<KPI> = await apiActions.get(
+  const response = await apiActions.get(
     `/api/v1/possales/analytics/kpi/`,
     { ...headers, params },
   );
-  return response.data;
+  const data = response.data;
+  return {
+    ...data,
+    total_revenue: Number(data.total_revenue) || 0,
+    total_profit: Number(data.total_profit) || 0,
+    profit_margin: Number(data.profit_margin) || 0,
+    average_order_value: Number(data.average_order_value) || 0,
+    online_revenue: Number(data.online_revenue) || 0,
+    pos_revenue: Number(data.pos_revenue) || 0,
+  };
 };
 
 // Combined chart: /api/v1/possales/analytics/sales-chart/
@@ -74,9 +83,9 @@ export const getCashierPerformance = async (
   headers: { headers: { Authorization: string } },
   params?: AnalyticsParams,
 ): Promise<CashierPerformance[]> => {
-  const response: AxiosResponse<CashierPerformance[]> = await apiActions.get(
+  const response = await apiActions.get(
     `/api/v1/possales/analytics/cashier/`,
     { ...headers, params },
   );
-  return response.data;
+  return response.data.cashiers || [];
 };
