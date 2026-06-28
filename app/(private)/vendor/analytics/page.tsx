@@ -22,6 +22,14 @@ import {
   ScanLine,
   Globe,
 } from "lucide-react";
+import {
+  DailyAnalyticsWidget,
+  TopSellersWidget,
+  ShiftDiscrepanciesWidget,
+  InventoryWidget,
+  CustomersWidget,
+  PaymentMethodsWidget,
+} from "@/components/analytics/ExtendedAnalytics";
 
 // --- Components ---
 
@@ -559,6 +567,20 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Extended Analytics Grid */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <DailyAnalyticsWidget currency={currency} />
+            <TopSellersWidget params={params} currency={currency} />
+            <ShiftDiscrepanciesWidget params={params} currency={currency} />
+          </div>
+          <div className="space-y-6">
+            <InventoryWidget currency={currency} />
+            <PaymentMethodsWidget params={params} currency={currency} />
+            <CustomersWidget />
           </div>
         </div>
       </div>

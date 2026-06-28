@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useFetchPOSSale } from "@/hooks/possales/actions";
-import { createPOSSale } from "@/services/possales";
+import { createPOSSale, triggerMpesaSTKPush } from "@/services/possales";
 import { useQueryClient } from "@tanstack/react-query";
 import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 import { X, CreditCard, Banknote, Smartphone, CheckCircle2, Loader2, AlertCircle, Plus, Trash2, Signal } from "lucide-react";
@@ -10,7 +10,7 @@ import { X, CreditCard, Banknote, Smartphone, CheckCircle2, Loader2, AlertCircle
 const PAYMENT_METHODS = [
   { value: "CASH", label: "Cash", icon: Banknote },
   { value: "MPESA_MANUAL", label: "M-Pesa Manual", icon: Smartphone },
-  // { value: "MPESA_STK", label: "M-Pesa STK", icon: Signal },
+  { value: "MPESA_STK", label: "M-Pesa STK", icon: Signal },
   { value: "CARD", label: "Card", icon: CreditCard },
 ] as const;
 
@@ -130,7 +130,12 @@ export const CheckoutModal = ({
       queryClient.invalidateQueries({ queryKey: ["possales"] });
 
       if (primaryPayment.method === "MPESA_STK") {
-        setStkSaleRef(sale.reference);
+        try {
+          await triggerMpesaSTKPush(sale.reference, primaryPayment.ref as string, header);
+          setStkSaleRef(sale.reference);
+        } catch (stkError: any) {
+          setErrorMsg(stkError?.response?.data?.detail || "Failed to trigger STK push.");
+        }
       } else {
         onSuccess(sale.reference);
       }
