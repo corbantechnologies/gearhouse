@@ -27,9 +27,8 @@ export const getPOSBundles = async (
   headers: { headers: { Authorization: string } }
 ): Promise<POSBundle[]> => {
   const query = activeOnly ? `?is_active=true` : "";
-  const response: AxiosResponse<PaginatedResponse<POSBundle>> =
-    await apiActions.get(`/api/v1/posbundles/${query}`, headers);
-  return response.data.results || [];
+  const response = await apiActions.get(`/api/v1/posbundles/${query}`, headers);
+  return Array.isArray(response.data) ? response.data : response.data?.results || [];
 };
 
 export const getPOSBundle = async (
@@ -42,7 +41,7 @@ export const getPOSBundle = async (
 };
 
 export const createPOSBundle = async (
-  data: FormData,
+  data: FormData | any,
   headers: { headers: { Authorization: string } }
 ): Promise<POSBundle> => {
   const response: AxiosResponse<POSBundle> = await apiActions.post(
@@ -55,7 +54,7 @@ export const createPOSBundle = async (
 
 export const updatePOSBundle = async (
   id: string,
-  data: FormData,
+  data: FormData | any,
   headers: { headers: { Authorization: string } }
 ): Promise<POSBundle> => {
   const response: AxiosResponse<POSBundle> = await apiActions.patch(

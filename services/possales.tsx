@@ -91,6 +91,7 @@ export interface CreatePOSSalePayment {
 
 export interface CreatePOSSale {
   items: CreatePOSSaleItem[];
+  bundle_ids?: string[];
   payment_method: "SPLIT" | "CASH" | "MPESA_STK" | "MPESA_MANUAL" | "CARD" | "LOYALTY_POINTS" | "OTHER";
   payments?: CreatePOSSalePayment[];
   walk_in_customer?: string;

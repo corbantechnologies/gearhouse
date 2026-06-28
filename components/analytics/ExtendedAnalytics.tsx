@@ -10,6 +10,7 @@ import {
   CalendarDays,
   FileWarning,
   TrendingUp,
+  Layers,
 } from "lucide-react";
 import {
   useDailyAnalytics,
@@ -18,6 +19,7 @@ import {
   usePaymentMethodsAnalytics,
   useCustomersAnalytics,
   useShiftDiscrepancies,
+  useBundleAnalytics,
 } from "@/hooks/analytics/actions";
 
 // --- Daily Analytics Component ---
@@ -267,6 +269,46 @@ export const PaymentMethodsWidget = ({ params, currency }: { params: any, curren
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+};
+
+
+// --- Bundle Performance Component ---
+export const BundlePerformanceWidget = ({ currency }: { currency: string }) => {
+  const { data, isLoading } = useBundleAnalytics();
+
+  if (isLoading) return <div className="h-64 bg-white rounded-2xl animate-pulse" />;
+  if (!data || data.top_bundles.length === 0) return null;
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#D2D2D7] p-5">
+      <h3 className="text-base font-bold text-[#1D1D1F] mb-4 flex items-center gap-2">
+        <Layers className="w-4 h-4 text-[#0071E3]" />
+        POS Bundle Performance
+      </h3>
+      <div className="mb-5 bg-[#F5F5F7] p-4 rounded-xl">
+        <p className="text-sm text-[#86868B] uppercase tracking-wider font-semibold mb-1">Total Bundle Revenue</p>
+        <p className="text-2xl font-bold text-emerald-600">{formatCurrency(data.total_bundle_revenue, currency)}</p>
+      </div>
+
+      <h4 className="text-sm font-semibold text-[#1D1D1F] mb-3">Top Selling Bundles</h4>
+      <div className="space-y-3">
+        {data.top_bundles.map((bundle: any, idx: number) => (
+          <div key={idx} className="flex justify-between items-center text-sm border-b border-[#F5F5F7] pb-2 last:border-0 last:pb-0">
+            <div>
+              <p className="font-medium text-[#1D1D1F] flex items-center gap-2">
+                {bundle.name}
+                {!bundle.is_active && <span className="text-[10px] bg-red-100 text-red-600 px-1 rounded uppercase font-bold tracking-wider">Inactive</span>}
+              </p>
+              <p className="text-xs text-[#86868B]">{bundle.quantity_sold} sold</p>
+            </div>
+            <div className="text-right font-semibold text-[#0071E3]">
+              {formatCurrency(bundle.revenue, currency)}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

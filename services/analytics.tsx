@@ -238,3 +238,10 @@ export const getCustomersAnalytics = async (
   );
   return response.data;
 };
+
+export const getBundleAnalytics = async (
+  headers: { headers: { Authorization: string } }
+) => {
+  const response = await apiActions.get("/api/v1/possales/analytics/bundles/", headers);
+  return response.data;
+};

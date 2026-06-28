@@ -15,6 +15,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import useAxiosAuth from "@/hooks/authentication/useAxiosAuth";
 import { InventoryItem } from "@/services/stockadjustments";
 import { POSSale, CreatePOSSaleItem } from "@/services/possales";
+import { useFetchPOSBundles } from "@/hooks/posbundles/actions";
+import { POSBundle } from "@/services/posbundles";
+import { Layers } from "lucide-react";
 import SectionHeader from "@/components/dashboard/SectionHeader";
 import {
   Search,
@@ -42,11 +45,13 @@ import {
 import Link from "next/link";
 import { OpenShiftModal, CloseShiftModal } from "./ShiftModals";
 import { CheckoutModal } from "@/components/vendor/pos/CheckoutModal";
+import CreateBundleModal from "@/components/vendor/pos/CreateBundleModal";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface CartItem {
-  variant: InventoryItem;
+  type: "variant" | "bundle";
+  item: any; // InventoryItem or POSBundle
   quantity: number;
 }
 
@@ -128,6 +133,45 @@ const ProductTile = ({
   );
 };
 
+// ─── Bundle Tile ──────────────────────────────────────────────────────────────
+
+const BundleTile = ({
+  bundle,
+  onAdd,
+}: {
+  bundle: POSBundle;
+  onAdd: (bundle: POSBundle) => void;
+}) => {
+  return (
+    <button
+      onClick={() => onAdd(bundle)}
+      className="group relative bg-white rounded-2xl border border-[#D2D2D7] hover:border-[#0071E3]/50 hover:shadow-md cursor-pointer active:scale-95 p-4 text-left transition-all duration-200"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-[#1D1D1F] truncate">
+            {bundle.name}
+          </p>
+          <p className="text-xs text-[#86868B] mt-1 font-mono line-clamp-2">
+            {bundle.items.map(i => `${i.quantity}x ${i.product_name}`).join(', ')}
+          </p>
+        </div>
+        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#0071E3]/10 text-[#0071E3] flex items-center justify-center group-hover:bg-[#0071E3] group-hover:text-white transition-colors">
+          <Plus className="w-3.5 h-3.5" />
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-base font-bold text-[#1D1D1F]">
+          {formatKES(parseFloat(bundle.price))}
+        </span>
+        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-[#0071E3]/10 text-[#0071E3]">
+          Bundle
+        </span>
+      </div>
+    </button>
+  );
+};
+
 // ─── Cart Line ────────────────────────────────────────────────────────────────
 
 const CartLine = ({
@@ -141,16 +185,21 @@ const CartLine = ({
   onDecrease: () => void;
   onRemove: () => void;
 }) => {
-  const attrs = attrLabel(item.variant.attributes);
+  const isBundle = item.type === "bundle";
+  const attrs = isBundle ? null : attrLabel(item.item.attributes);
+  const name = isBundle ? item.item.name : item.item.product_name;
+  const price = isBundle ? parseFloat(item.item.price) : item.item.price;
+
   return (
     <div className="flex items-center gap-3 py-3 border-b border-[#F5F5F7] last:border-0">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-[#1D1D1F] truncate">
-          {item.variant.product_name}
+        <p className="text-sm font-semibold text-[#1D1D1F] flex items-center gap-2 truncate">
+          {name}
+          {isBundle && <span className="text-[10px] uppercase tracking-wider font-bold bg-[#0071E3]/10 text-[#0071E3] px-1.5 py-0.5 rounded">Bundle</span>}
         </p>
         {attrs && <p className="text-xs text-[#86868B] truncate">{attrs}</p>}
         <p className="text-sm font-medium text-[#0071E3] mt-0.5">
-          {formatKES(item.variant.price * item.quantity)}
+          {formatKES(price * item.quantity)}
         </p>
       </div>
       <div className="flex items-center gap-1 flex-shrink-0">
@@ -165,7 +214,7 @@ const CartLine = ({
         </span>
         <button
           onClick={onIncrease}
-          disabled={item.quantity >= item.variant.stock}
+          disabled={item.type === 'variant' && item.quantity >= item.item.stock}
           className="w-7 h-7 rounded-lg border border-[#D2D2D7] flex items-center justify-center hover:bg-[#F5F5F7] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Plus className="w-3 h-3" />
@@ -246,6 +295,9 @@ export default function POSPage() {
     useFetchCurrentShift();
   const { data: inventory = [], isLoading: inventoryLoading } =
     useFetchInventory();
+  const { data: bundles = [], isLoading: bundlesLoading } = useFetchPOSBundles(true);
+  const [isCreateBundleModalOpen, setIsCreateBundleModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"products" | "bundles">("products");
   const { data: recentSales = [] } = useFetchPOSSales();
   const queryClient = useQueryClient();
   const header = useAxiosAuth();
@@ -351,6 +403,13 @@ export default function POSPage() {
     );
   }, [inventory, search]);
 
+  const filteredBundles = useMemo(() => {
+    const q = search.toLowerCase();
+    return bundles.filter(
+      (b) => b.name.toLowerCase().includes(q)
+    );
+  }, [bundles, search]);
+
   // Today's sales only
   const todaySales = useMemo(() => {
     const today = new Date().toDateString();
@@ -362,7 +421,10 @@ export default function POSPage() {
   // Cart calculations
   const cartTotal = useMemo(
     () =>
-      cart.reduce((sum, item) => sum + item.variant.price * item.quantity, 0),
+      cart.reduce((sum, item) => {
+        const price = item.type === "bundle" ? parseFloat(item.item.price) : item.item.price;
+        return sum + price * item.quantity;
+      }, 0),
     [cart],
   );
   const cartCount = useMemo(
@@ -371,45 +433,63 @@ export default function POSPage() {
   );
 
   // Cart handlers
-  const addToCart = (item: InventoryItem) => {
+  const addVariantToCart = (item: InventoryItem) => {
     setCart((prev) => {
       const existing = prev.find(
-        (c) => c.variant.variant_id === item.variant_id,
+        (c) => c.type === "variant" && c.item.variant_id === item.variant_id,
       );
       if (existing) {
         if (existing.quantity >= item.stock) return prev;
         return prev.map((c) =>
-          c.variant.variant_id === item.variant_id
+          c.type === "variant" && c.item.variant_id === item.variant_id
             ? { ...c, quantity: c.quantity + 1 }
             : c,
         );
       }
-      return [...prev, { variant: item, quantity: 1 }];
+      return [...prev, { type: "variant", item, quantity: 1 }];
     });
   };
 
-  const increase = (variantId: string) =>
+  const addBundleToCart = (bundle: POSBundle) => {
+    setCart((prev) => {
+      const existing = prev.find(
+        (c) => c.type === "bundle" && c.item.id === bundle.id,
+      );
+      if (existing) {
+        return prev.map((c) =>
+          c.type === "bundle" && c.item.id === bundle.id
+            ? { ...c, quantity: c.quantity + 1 }
+            : c,
+        );
+      }
+      return [...prev, { type: "bundle", item: bundle, quantity: 1 }];
+    });
+  };
+
+  const increase = (id: string, type: "variant" | "bundle") =>
     setCart((prev) =>
-      prev.map((c) =>
-        c.variant.variant_id === variantId && c.quantity < c.variant.stock
-          ? { ...c, quantity: c.quantity + 1 }
-          : c,
-      ),
+      prev.map((c) => {
+        if (c.type === type && (type === "variant" ? c.item.variant_id === id : c.item.id === id)) {
+          if (type === "variant" && c.quantity >= c.item.stock) return c;
+          return { ...c, quantity: c.quantity + 1 };
+        }
+        return c;
+      })
     );
 
-  const decrease = (variantId: string) =>
+  const decrease = (id: string, type: "variant" | "bundle") =>
     setCart((prev) =>
       prev
         .map((c) =>
-          c.variant.variant_id === variantId
+          c.type === type && (type === "variant" ? c.item.variant_id === id : c.item.id === id)
             ? { ...c, quantity: c.quantity - 1 }
             : c,
         )
         .filter((c) => c.quantity > 0),
     );
 
-  const remove = (variantId: string) =>
-    setCart((prev) => prev.filter((c) => c.variant.variant_id !== variantId));
+  const remove = (id: string, type: "variant" | "bundle") =>
+    setCart((prev) => prev.filter((c) => !(c.type === type && (type === "variant" ? c.item.variant_id === id : c.item.id === id))));
 
   const clearCart = () => {
     setCart([]);
@@ -487,12 +567,49 @@ export default function POSPage() {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
               <input
                 type="text"
-                placeholder="Search products by name or SKU…"
+                placeholder={`Search ${activeTab}...`}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 disabled={!currentShift}
                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               />
+            </div>
+
+            {/* Tabbed Navigation and Actions */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 bg-[#E3E3E8] p-1 rounded-xl w-fit">
+                <button
+                  onClick={() => setActiveTab("products")}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                    activeTab === "products"
+                      ? "bg-white text-[#1D1D1F] shadow-sm"
+                      : "text-[#6E6E73] hover:text-[#1D1D1F]"
+                  }`}
+                >
+                  Products
+                </button>
+                <button
+                  onClick={() => setActiveTab("bundles")}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                    activeTab === "bundles"
+                      ? "bg-white text-[#1D1D1F] shadow-sm"
+                      : "text-[#6E6E73] hover:text-[#1D1D1F]"
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  Bundles
+                </button>
+              </div>
+              
+              {activeTab === "bundles" && currentShift && (
+                <button
+                  onClick={() => setIsCreateBundleModalOpen(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[#0071E3]/10 text-[#0071E3] rounded-lg text-sm font-semibold hover:bg-[#0071E3]/20 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Bundle
+                </button>
+              )}
             </div>
 
             {/* Product Grid */}
@@ -512,37 +629,72 @@ export default function POSPage() {
                   Open Shift
                 </button>
               </div>
-            ) : inventoryLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {Array(9)
-                  .fill(0)
-                  .map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-28 bg-white rounded-2xl border border-[#D2D2D7] animate-pulse"
+            ) : activeTab === "products" ? (
+              inventoryLoading ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {Array(9)
+                    .fill(0)
+                    .map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-28 bg-white rounded-2xl border border-[#D2D2D7] animate-pulse"
+                      />
+                    ))}
+                </div>
+              ) : filteredInventory.length === 0 ? (
+                <div className="py-20 flex flex-col items-center gap-3 bg-white rounded-2xl border border-dashed border-[#D2D2D7]">
+                  <ScanLine className="w-10 h-10 text-[#D2D2D7]" />
+                  <p className="text-sm font-semibold text-[#1D1D1F]">
+                    No products found
+                  </p>
+                  <p className="text-xs text-[#86868B]">
+                    Try a different search, or add products first.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {filteredInventory.map((item) => (
+                    <ProductTile
+                      key={item.variant_id}
+                      item={item}
+                      onAdd={addVariantToCart}
                     />
                   ))}
-              </div>
-            ) : filteredInventory.length === 0 ? (
-              <div className="py-20 flex flex-col items-center gap-3 bg-white rounded-2xl border border-dashed border-[#D2D2D7]">
-                <ScanLine className="w-10 h-10 text-[#D2D2D7]" />
-                <p className="text-sm font-semibold text-[#1D1D1F]">
-                  No products found
-                </p>
-                <p className="text-xs text-[#86868B]">
-                  Try a different search, or add products first.
-                </p>
-              </div>
+                </div>
+              )
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {filteredInventory.map((item) => (
-                  <ProductTile
-                    key={item.variant_id}
-                    item={item}
-                    onAdd={addToCart}
-                  />
-                ))}
-              </div>
+              bundlesLoading ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {Array(3)
+                    .fill(0)
+                    .map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-28 bg-white rounded-2xl border border-[#D2D2D7] animate-pulse"
+                      />
+                    ))}
+                </div>
+              ) : filteredBundles.length === 0 ? (
+                <div className="py-20 flex flex-col items-center gap-3 bg-white rounded-2xl border border-dashed border-[#D2D2D7]">
+                  <Layers className="w-10 h-10 text-[#D2D2D7]" />
+                  <p className="text-sm font-semibold text-[#1D1D1F]">
+                    No bundles found
+                  </p>
+                  <p className="text-xs text-[#86868B]">
+                    Create bundles from the settings menu first.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {filteredBundles.map((bundle) => (
+                    <BundleTile
+                      key={bundle.id}
+                      bundle={bundle}
+                      onAdd={addBundleToCart}
+                    />
+                  ))}
+                </div>
+              )
             )}
           </div>
 
@@ -607,15 +759,18 @@ export default function POSPage() {
                     </p>
                   </div>
                 ) : (
-                  cart.map((item) => (
-                    <CartLine
-                      key={item.variant.variant_id}
-                      item={item}
-                      onIncrease={() => increase(item.variant.variant_id)}
-                      onDecrease={() => decrease(item.variant.variant_id)}
-                      onRemove={() => remove(item.variant.variant_id)}
-                    />
-                  ))
+                  cart.map((item) => {
+                    const id = item.type === "variant" ? item.item.variant_id : item.item.id;
+                    return (
+                      <CartLine
+                        key={`${item.type}-${id}`}
+                        item={item}
+                        onIncrease={() => increase(id, item.type)}
+                        onDecrease={() => decrease(id, item.type)}
+                        onRemove={() => remove(id, item.type)}
+                      />
+                    );
+                  })
                 )}
               </div>
 
@@ -841,6 +996,9 @@ export default function POSPage() {
           onClose={() => setIsCheckoutModalOpen(false)}
           onSuccess={handleCheckoutSuccess}
         />
+      )}
+      {isCreateBundleModalOpen && (
+        <CreateBundleModal onClose={() => setIsCreateBundleModalOpen(false)} />
       )}
     </div>
   );

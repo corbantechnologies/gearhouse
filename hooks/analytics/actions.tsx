@@ -8,6 +8,7 @@ import { getKPI, getSales, getCashierPerformance, AnalyticsParams,
   getInventoryAnalytics,
   getPaymentMethodsAnalytics,
   getCustomersAnalytics,
+  getBundleAnalytics,
   DailyAnalyticsParams,
 } from "@/services/analytics";
 import useAxiosAuth from "../authentication/useAxiosAuth";
@@ -82,5 +83,13 @@ export const useCustomersAnalytics = () => {
   return useQuery({
     queryKey: ["customersAnalytics"],
     queryFn: () => getCustomersAnalytics(headers),
+  });
+};
+
+export const useBundleAnalytics = () => {
+  const headers = useAxiosAuth();
+  return useQuery({
+    queryKey: ["bundleAnalytics"],
+    queryFn: () => getBundleAnalytics(headers),
   });
 };
