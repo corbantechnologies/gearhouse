@@ -6,7 +6,8 @@ import {
   useSales,
   useCashierPerformance,
 } from "@/hooks/analytics/actions";
-import { useFetchAccount } from "@/hooks/accounts/actions";
+import { useFetchAccount, useFetchPOSStaffList } from "@/hooks/accounts/actions";
+import { useFetchPOSTills } from "@/hooks/postills/actions";
 import { formatCurrency } from "@/components/dashboard/utils";
 import SectionHeader from "@/components/dashboard/SectionHeader";
 import {
@@ -21,6 +22,8 @@ import {
   Loader2,
   ScanLine,
   Globe,
+  Users,
+  MonitorSmartphone,
 } from "lucide-react";
 import {
   DailyAnalyticsWidget,
@@ -333,7 +336,7 @@ const CashierPerformanceTable = ({
   );
 };
 
-export default function AnalyticsPage() {
+export default function AnalyticsTab() {
   const { data: user } = useFetchAccount();
   const currency = user?.shop?.currency || "KES";
 
@@ -385,203 +388,218 @@ export default function AnalyticsPage() {
   const { data: cashierPerformance, isLoading: cashierLoading } =
     useCashierPerformance(params);
 
+  // New POS metrics
+  const { data: posTills } = useFetchPOSTills();
+  const { data: posStaffList } = useFetchPOSStaffList();
+
   return (
-    <div className="min-h-screen bg-[#F5F5F7] pb-12">
-      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 py-6 md:py-12">
-        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <SectionHeader
-            title="Analytics"
-            description="Combined online + POS performance for your shop."
-          />
+    <div className="animate-in fade-in duration-500">
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <SectionHeader
+          title="Analytics"
+          description="Combined online + POS performance for your shop."
+        />
 
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={groupBy}
-              onChange={(e) => setGroupBy(e.target.value)}
-              className="px-3 py-2 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all bg-white min-w-[100px]"
-            >
-              <option value="day">By Day</option>
-              <option value="month">By Month</option>
-              <option value="year">By Year</option>
-            </select>
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={groupBy}
+            onChange={(e) => setGroupBy(e.target.value)}
+            className="px-3 py-2 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all bg-white min-w-[100px]"
+          >
+            <option value="day">By Day</option>
+            <option value="month">By Month</option>
+            <option value="year">By Year</option>
+          </select>
 
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="px-3 py-2 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all bg-white min-w-[140px]"
-            >
-              <option value="today">Today</option>
-              <option value="last_7_days">Last 7 Days</option>
-              <option value="last_30_days">Last 30 Days</option>
-              <option value="this_month">This Month</option>
-              <option value="custom">Custom Range</option>
-            </select>
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="px-3 py-2 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all bg-white min-w-[140px]"
+          >
+            <option value="today">Today</option>
+            <option value="last_7_days">Last 7 Days</option>
+            <option value="last_30_days">Last 30 Days</option>
+            <option value="this_month">This Month</option>
+            <option value="custom">Custom Range</option>
+          </select>
 
-            {dateRange === "custom" && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={customStart}
-                  onChange={(e) => setCustomStart(e.target.value)}
-                  className="px-3 py-2 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all bg-white"
-                />
-                <span className="text-[#86868B]">—</span>
-                <input
-                  type="date"
-                  value={customEnd}
-                  onChange={(e) => setCustomEnd(e.target.value)}
-                  className="px-3 py-2 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all bg-white"
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* KPI Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-          {kpiLoading ? (
-            Array(6)
-              .fill(0)
-              .map((_, i) => (
-                <div
-                  key={i}
-                  className="h-32 bg-white rounded-2xl border border-[#D2D2D7] animate-pulse"
-                />
-              ))
-          ) : kpi ? (
-            <>
-              <KPICard
-                title="Total Revenue"
-                value={formatCurrency(kpi.total_revenue, currency)}
-                icon={DollarSign}
-                colorClass="bg-green-100 text-green-700"
+          {dateRange === "custom" && (
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                className="px-3 py-2 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all bg-white"
               />
-              <KPICard
-                title="Online Orders"
-                value={kpi.online_orders}
-                icon={Globe}
-                colorClass="bg-blue-100 text-blue-700"
+              <span className="text-[#86868B]">—</span>
+              <input
+                type="date"
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className="px-3 py-2 border border-[#D2D2D7] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 focus:border-[#0071E3] transition-all bg-white"
               />
-              <KPICard
-                title="POS Sales"
-                value={kpi.pos_sales}
-                icon={ScanLine}
-                colorClass="bg-violet-100 text-violet-700"
-              />
-              <KPICard
-                title="Items Sold"
-                value={kpi.items_sold}
-                icon={Package}
-                colorClass="bg-orange-100 text-orange-700"
-              />
-              <KPICard
-                title="Total Profit"
-                value={formatCurrency(kpi.total_profit, currency)}
-                icon={TrendingUp}
-                colorClass="bg-emerald-100 text-emerald-700"
-              />
-              <KPICard
-                title="Profit Margin"
-                value={`${kpi.profit_margin.toFixed(1)}%`}
-                icon={Percent}
-                colorClass="bg-pink-100 text-pink-700"
-              />
-            </>
-          ) : (
-            <div className="col-span-full py-16 text-center">
-              <p className="text-sm font-semibold text-[#1D1D1F]">
-                No KPI data available
-              </p>
-              <p className="text-xs text-[#86868B] mt-1">
-                Start making sales to see your performance metrics here.
-              </p>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Charts & Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <SalesChart
-              data={sales}
-              isLoading={salesLoading}
-              currency={currency}
-            />
-            <CashierPerformanceTable
-              data={cashierPerformance}
-              isLoading={cashierLoading}
-              currency={currency}
-            />
-          </div>
-
-          <div className="space-y-5">
-            {/* Revenue by Channel */}
-            {kpi && (
-              <SourceBadge
-                online={kpi.online_revenue}
-                pos={kpi.pos_revenue}
-                currency={currency}
+      {/* KPI Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        {kpiLoading ? (
+          Array(8)
+            .fill(0)
+            .map((_, i) => (
+              <div
+                key={i}
+                className="h-32 bg-white rounded-2xl border border-[#D2D2D7] animate-pulse"
               />
-            )}
+            ))
+        ) : kpi ? (
+          <>
+            <KPICard
+              title="Total Revenue"
+              value={formatCurrency(kpi.total_revenue, currency)}
+              icon={DollarSign}
+              colorClass="bg-green-100 text-green-700"
+            />
+            <KPICard
+              title="Online Orders"
+              value={kpi.online_orders}
+              icon={Globe}
+              colorClass="bg-blue-100 text-blue-700"
+            />
+            <KPICard
+              title="POS Sales"
+              value={kpi.pos_sales}
+              icon={ScanLine}
+              colorClass="bg-violet-100 text-violet-700"
+            />
+            <KPICard
+              title="Items Sold"
+              value={kpi.items_sold}
+              icon={Package}
+              colorClass="bg-orange-100 text-orange-700"
+            />
+            <KPICard
+              title="Total Profit"
+              value={formatCurrency(kpi.total_profit, currency)}
+              icon={TrendingUp}
+              colorClass="bg-emerald-100 text-emerald-700"
+            />
+            <KPICard
+              title="Profit Margin"
+              value={`${kpi.profit_margin.toFixed(1)}%`}
+              icon={Percent}
+              colorClass="bg-pink-100 text-pink-700"
+            />
+            {/* Added POS Metrics */}
+            <KPICard
+              title="Active POS Tills"
+              value={posTills ? posTills.length : 0}
+              icon={MonitorSmartphone}
+              colorClass="bg-indigo-100 text-indigo-700"
+            />
+            <KPICard
+              title="POS Staff"
+              value={posStaffList ? posStaffList.length : 0}
+              icon={Users}
+              colorClass="bg-cyan-100 text-cyan-700"
+            />
+          </>
+        ) : (
+          <div className="col-span-full py-16 text-center">
+            <p className="text-sm font-semibold text-[#1D1D1F]">
+              No KPI data available
+            </p>
+            <p className="text-xs text-[#86868B] mt-1">
+              Start making sales to see your performance metrics here.
+            </p>
+          </div>
+        )}
+      </div>
 
-            {/* Performance Summary */}
-            <div className="bg-white rounded-2xl border border-[#D2D2D7] p-5">
-              <h3 className="text-base font-bold text-[#1D1D1F] mb-4 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#0071E3]" />
-                Performance Summary
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-[#6E6E73]">Avg. Order Value</span>
-                  <span className="font-medium text-[#1D1D1F]">
-                    {kpi
-                      ? formatCurrency(kpi.average_order_value, currency)
-                      : "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-[#6E6E73]">Online Revenue</span>
-                  <span className="font-medium text-[#1D1D1F]">
-                    {kpi ? formatCurrency(kpi.online_revenue, currency) : "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-[#6E6E73]">POS Revenue</span>
-                  <span className="font-medium text-emerald-600">
-                    {kpi ? formatCurrency(kpi.pos_revenue, currency) : "—"}
-                  </span>
-                </div>
-                <div className="h-px bg-[#F5F5F7]" />
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-[#6E6E73]">Busiest Day</span>
-                  <span className="font-medium text-[#1D1D1F]">
-                    {sales && Array.isArray(sales) && sales.length > 0
-                      ? new Date(
-                          sales.reduce((a, b) =>
-                            a.total_revenue > b.total_revenue ? a : b,
-                          ).date,
-                        ).toLocaleDateString("en-US", { weekday: "long" })
-                      : "—"}
-                  </span>
-                </div>
+      {/* Charts & Details */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <SalesChart
+            data={sales}
+            isLoading={salesLoading}
+            currency={currency}
+          />
+          <CashierPerformanceTable
+            data={cashierPerformance}
+            isLoading={cashierLoading}
+            currency={currency}
+          />
+        </div>
+
+        <div className="space-y-5">
+          {/* Revenue by Channel */}
+          {kpi && (
+            <SourceBadge
+              online={kpi.online_revenue}
+              pos={kpi.pos_revenue}
+              currency={currency}
+            />
+          )}
+
+          {/* Performance Summary */}
+          <div className="bg-white rounded-2xl border border-[#D2D2D7] p-5">
+            <h3 className="text-base font-bold text-[#1D1D1F] mb-4 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[#0071E3]" />
+              Performance Summary
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-[#6E6E73]">Avg. Order Value</span>
+                <span className="font-medium text-[#1D1D1F]">
+                  {kpi
+                    ? formatCurrency(kpi.average_order_value, currency)
+                    : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-[#6E6E73]">Online Revenue</span>
+                <span className="font-medium text-[#1D1D1F]">
+                  {kpi ? formatCurrency(kpi.online_revenue, currency) : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-[#6E6E73]">POS Revenue</span>
+                <span className="font-medium text-emerald-600">
+                  {kpi ? formatCurrency(kpi.pos_revenue, currency) : "—"}
+                </span>
+              </div>
+              <div className="h-px bg-[#F5F5F7]" />
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-[#6E6E73]">Busiest Day</span>
+                <span className="font-medium text-[#1D1D1F]">
+                  {sales && Array.isArray(sales) && sales.length > 0
+                    ? new Date(
+                        sales.reduce((a, b) =>
+                          a.total_revenue > b.total_revenue ? a : b,
+                        ).date,
+                      ).toLocaleDateString("en-US", { weekday: "long" })
+                    : "—"}
+                </span>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Extended Analytics Grid */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <DailyAnalyticsWidget currency={currency} />
-            <TopSellersWidget params={params} currency={currency} />
-            <ShiftDiscrepanciesWidget params={params} currency={currency} />
-          </div>
-          <div className="space-y-6">
-            <InventoryWidget currency={currency} />
-            <PaymentMethodsWidget params={params} currency={currency} />
-            <CustomersWidget />
-          </div>
+      {/* Extended Analytics Grid */}
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <DailyAnalyticsWidget currency={currency} />
+          <TopSellersWidget params={params} currency={currency} />
+          <ShiftDiscrepanciesWidget params={params} currency={currency} />
+        </div>
+        <div className="space-y-6">
+          <InventoryWidget currency={currency} />
+          <PaymentMethodsWidget params={params} currency={currency} />
+          <CustomersWidget />
         </div>
       </div>
     </div>
