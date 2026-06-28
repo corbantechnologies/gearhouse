@@ -29,6 +29,7 @@ import {
   InventoryWidget,
   CustomersWidget,
   PaymentMethodsWidget,
+  BundlePerformanceWidget,
 } from "@/components/analytics/ExtendedAnalytics";
 
 // --- Components ---
@@ -581,6 +582,7 @@ export default function AnalyticsPage() {
             <InventoryWidget currency={currency} />
             <PaymentMethodsWidget params={params} currency={currency} />
             <CustomersWidget />
+          <BundlePerformanceWidget currency={currency} />
           </div>
         </div>
       </div>

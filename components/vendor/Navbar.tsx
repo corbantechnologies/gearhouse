@@ -23,6 +23,7 @@ import {
   Store,
   ChevronDown,
   ChevronRight,
+  Layers,
 } from "lucide-react";
 
 export default function VendorNavbar() {
@@ -49,6 +50,7 @@ export default function VendorNavbar() {
     { name: "POS Shifts", href: "/vendor/pos-shifts", icon: ClipboardList },
     { name: "Customers", href: "/pos/customers", icon: Users },
     { name: "POS Register", href: "/pos/register", icon: ScanLine },
+    { name: "Manage Bundles", href: "/pos/bundles", icon: Layers },
     { name: "POS Settings", href: "/pos/settings", icon: Settings },
   ];
 
@@ -59,7 +61,7 @@ export default function VendorNavbar() {
     : mainNavLinks;
 
   const filteredPosNavLinks = isStrictlyPOSStaff
-    ? posNavLinks.filter((link) => ["POS Register", "Customers"].includes(link.name))
+    ? posNavLinks.filter((link) => ["POS Register", "Customers", "Manage Bundles"].includes(link.name))
     : posNavLinks;
 
   // Open the dropdown automatically if we are currently on a POS page

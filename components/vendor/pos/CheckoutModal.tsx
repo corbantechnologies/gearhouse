@@ -107,10 +107,21 @@ export const CheckoutModal = ({
 
     setIsSubmitting(true);
     try {
-      const items = cart.map((c) => ({
-        variant: c.variant.variant_id,
-        quantity: c.quantity,
-      }));
+      const items = cart
+        .filter((c: any) => c.type === "variant")
+        .map((c: any) => ({
+          variant: c.item.variant_id,
+          quantity: c.quantity,
+        }));
+
+      const bundle_ids: string[] = [];
+      cart
+        .filter((c: any) => c.type === "bundle")
+        .forEach((c: any) => {
+          for (let i = 0; i < c.quantity; i++) {
+            bundle_ids.push(c.item.id);
+          }
+        });
 
       // Map split payments for backend if it supports split, otherwise use the primary one for now
       // Assuming backend uses `payment_method` for primary and `mpesa_reference`
@@ -118,6 +129,7 @@ export const CheckoutModal = ({
 
       const sale = await createPOSSale({
         items,
+        bundle_ids: bundle_ids.length > 0 ? bundle_ids : undefined,
         payment_method: primaryPayment.method as any,
         mpesa_reference: primaryPayment.method === "MPESA_MANUAL" ? primaryPayment.ref : undefined,
         mpesa_phone_number: primaryPayment.method === "MPESA_STK" ? primaryPayment.ref : undefined,
